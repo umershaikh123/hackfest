@@ -20,7 +20,19 @@ Product Maestro is an AI-powered no-code IDE for product managers, built as a ha
 - `npm run test:idea` - Test idea generation functionality
 - `npm run test:rag` - Test RAG (Retrieval Augmented Generation) setup
 - `npm run test:prd` - Test PRD generation and Notion integration functionality
+- `npx tsx src/test/testEndToEnd.ts` - End-to-end PRD generation pipeline test
 - Individual component testing available via exported test functions in respective files
+
+### Troubleshooting
+
+#### Mastra Dev Server Issues
+If you encounter `EBUSY: resource busy or locked` errors when running `npm run dev`:
+
+1. **Clean build artifacts**: `rm -rf .mastra`
+2. **Run build first**: `npm run build` 
+3. **Then start dev server**: `npm run dev`
+
+This ensures the Mastra build system is properly initialized before starting the development server.
 
 ### Environment Requirements
 

@@ -9,7 +9,12 @@ import { productDevelopmentWorkflow } from "./workflows/productDevelopmentWorkfl
 
 import { pineconeStore, initializePineconeIndex } from "./vectors/pineconeSetup"
 import "dotenv/config"
-initializePineconeIndex().catch(console.error)
+
+// Initialize Pinecone with better error handling
+initializePineconeIndex().catch((error) => {
+  console.warn("⚠️ Pinecone initialization failed - RAG features will be unavailable:", error.message)
+  // Don't throw error to prevent blocking the entire application
+})
 
 const storage = new LibSQLStore({
   url: process.env.DATABASE_URL || "file:./product-maestro.db",

@@ -1,8 +1,10 @@
 import { PineconeVector } from "@mastra/pinecone"
 import "dotenv/config"
+
+// Initialize Pinecone store with error handling
 export const pineconeStore = new PineconeVector({
   apiKey: process.env.PINECONE_API_KEY!,
-  environment: process.env.PINECONE_ENVIRONMENT!,
+  host: process.env.PINECONE_HOST!,
 })
 
 // Initialize index if it doesn't exist
