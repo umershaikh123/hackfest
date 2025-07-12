@@ -4,7 +4,10 @@ import { LibSQLStore } from "@mastra/libsql"
 import { Memory } from "@mastra/memory"
 import { ideaGenerationAgent } from "./agents/ideaGenerationAgent"
 import { productDevelopmentWorkflow } from "./workflows/productDevelopmentWorkflow"
-import { PineconeVector } from "@mastra/pinecone"
+
+import { pineconeStore, initializePineconeIndex } from "./vectors/pineconeSetup"
+import "dotenv/config"
+initializePineconeIndex().catch(console.error)
 
 const storage = new LibSQLStore({
   url: process.env.DATABASE_URL || "file:./product-maestro.db",
@@ -25,6 +28,7 @@ export const mastra = new Mastra({
     productDevelopmentWorkflow,
     // We'll add more workflows here as we build them
   },
+
   storage,
   logger: new PinoLogger({
     name: "ProductMaestro",
