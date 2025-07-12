@@ -1,19 +1,33 @@
+import { Mastra } from "@mastra/core/mastra"
+import { PinoLogger } from "@mastra/loggers"
+import { LibSQLStore } from "@mastra/libsql"
+import { Memory } from "@mastra/memory"
+import { ideaGenerationAgent } from "./agents/ideaGenerationAgent"
+import { productDevelopmentWorkflow } from "./workflows/productDevelopmentWorkflow"
+import { PineconeVector } from "@mastra/pinecone"
 
-import { Mastra } from '@mastra/core/mastra';
-import { PinoLogger } from '@mastra/loggers';
-import { LibSQLStore } from '@mastra/libsql';
-import { weatherWorkflow } from './workflows/weather-workflow';
-import { weatherAgent } from './agents/weather-agent';
+const storage = new LibSQLStore({
+  url: process.env.DATABASE_URL || "file:./product-maestro.db",
+})
+
+// const pineconeStore = new PineconeStore({
+//   apiKey: process.env.PINECONE_API_KEY!,
+//   host: process.env.PINECONE_HOST!,
+//   indexName: process.env.PINECONE_INDEX_NAME!,
+// });
 
 export const mastra = new Mastra({
-  workflows: { weatherWorkflow },
-  agents: { weatherAgent },
-  storage: new LibSQLStore({
-    // stores telemetry, evals, ... into memory storage, if it needs to persist, change to file:../mastra.db
-    url: ":memory:",
-  }),
+  agents: {
+    ideaGenerationAgent,
+    // We'll add more agents here as we build them
+  },
+  workflows: {
+    productDevelopmentWorkflow,
+    // We'll add more workflows here as we build them
+  },
+  storage,
   logger: new PinoLogger({
-    name: 'Mastra',
-    level: 'info',
+    name: "ProductMaestro",
+    level: "info",
   }),
-});
+})

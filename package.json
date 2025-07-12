@@ -1,22 +1,28 @@
 {
-  "name": "hackfest",
+  "name": "product-maestro",
   "version": "1.0.0",
   "main": "index.js",
+  "description": "AI-powered no-code IDE for product managers",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "mastra dev",
     "build": "mastra build",
-    "start": "mastra start"
+    "start": "mastra start",
+    "test:idea": "tsx src/test/testIdeaGeneration.ts",
+    "type-check": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "type": "module",
   "engines": {
     "node": ">=20.9.0"
   },
   "dependencies": {
+    "@mastra/rag": "latest",
+    "@mastra/pinecone": "latest",
+    "@ai-sdk/openai": "latest",
+    "dotenv": "^16.0.0",
     "@ai-sdk/anthropic": "^1.2.12",
     "@ai-sdk/google": "^1.2.22",
     "@mastra/core": "^0.10.12",
@@ -26,8 +32,9 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/node": "^24.0.13",
+    "@types/node": "^20.0.0",
     "mastra": "^0.10.12",
-    "typescript": "^5.8.3"
+    "typescript": "^5.0.0",
+    "tsx": "^4.0.0"
   }
 }
