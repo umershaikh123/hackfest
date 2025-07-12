@@ -1,10 +1,16 @@
 import { mastra } from "../mastra/index"
 import { populateKnowledgeBase } from "../mastra/setup/populateKnowledgeBase"
 import { testIdeaGenerationAgent } from "../mastra/agents/ideaGenerationAgent"
+import { testUserStoryGeneratorAgent } from "../mastra/agents/userStoryGeneratorAgent"
+import { testRAGKnowledgeTool } from "../mastra/tools/ragKnowledgeTool"
 import { RuntimeContext } from "@mastra/core/di"
+import {
+  testProductDevelopmentWorkflow,
+  testUserStoryGeneration,
+} from "../mastra/workflows/productDevelopmentWorkflow"
 
 async function main() {
-  console.log("🎯 Product Maestro - Testing Idea Generation Components\n")
+  console.log("🎯 Product Maestro - Testing Enhanced System Components\n")
 
   try {
     // Test 0: Initialize Pinecone Knowledge Base
@@ -20,7 +26,7 @@ async function main() {
       console.log("📝 Continuing with other tests...")
     }
 
-    // Test 1: Direct tool usage - FIXED
+    // Test 1: Direct tool usage - Idea Generation Tool
     console.log("\n" + "=".repeat(60))
     console.log("TEST 1: Testing Idea Generation Tool Directly")
     console.log("=".repeat(60))
@@ -46,8 +52,11 @@ async function main() {
       runtimeContext,
     })
 
-    console.log("🛠️ Tool Output:")
-    console.log(JSON.stringify(toolResult, null, 2))
+    console.log("🛠️ Idea Generation Tool Output:")
+    console.log(`✅ Product: ${toolResult.refinedIdea.title}`)
+    console.log(`✅ Features: ${toolResult.refinedIdea.coreFeatures.length}`)
+    console.log(`✅ Personas: ${toolResult.userPersonas.length}`)
+    console.log(`✅ Questions: ${toolResult.clarifyingQuestions.length}`)
 
     // Test 2: RAG tool
     console.log("\n" + "=".repeat(60))
@@ -55,83 +64,94 @@ async function main() {
     console.log("=".repeat(60))
 
     try {
-      const ragTool = (await import("../mastra/tools/ragKnowledgeTool"))
-        .ragKnowledgeTool
-
-      const ragResult = await ragTool.execute({
-        context: {
-          query: "user persona best practices",
-          topK: 3,
-        },
-        runtimeContext,
-      })
-
-      console.log("🧠 RAG Tool Output:")
-      console.log(JSON.stringify(ragResult, null, 2))
+      await testRAGKnowledgeTool()
     } catch (error) {
       console.log("⚠️ RAG tool test failed:", error.message)
     }
 
-    // Test 3: Agent interaction
+    // Test 3: User Story Generation Tool
     console.log("\n" + "=".repeat(60))
-    console.log("TEST 3: Testing Idea Generation Agent")
+    console.log("TEST 3: Testing User Story Generation Tool Directly")
+    console.log("=".repeat(60))
+
+    const userStoryGeneratorTool = (
+      await import("../mastra/tools/userStoryGeneratorTool")
+    ).userStoryGeneratorTool
+
+    const userStoryToolResult = await userStoryGeneratorTool.execute({
+      context: {
+        productIdea: toolResult.refinedIdea,
+        userPersonas: toolResult.userPersonas,
+        focusAreas: ["core features", "user onboarding"],
+      },
+      runtimeContext,
+    })
+
+    console.log("🛠️ User Story Tool Output:")
+    console.log(`✅ Epics: ${userStoryToolResult.epics.length}`)
+    console.log(`✅ User Stories: ${userStoryToolResult.userStories.length}`)
+    console.log(`✅ MVP Stories: ${userStoryToolResult.mvpStories.length}`)
+    console.log(
+      `✅ Total Story Points: ${userStoryToolResult.totalEstimate.storyPoints}`
+    )
+
+    // Test 4: Idea Generation Agent
+    console.log("\n" + "=".repeat(60))
+    console.log("TEST 4: Testing Idea Generation Agent")
     console.log("=".repeat(60))
 
     const agentResult = await testIdeaGenerationAgent()
-    console.log("🤖 Agent Response Complete")
+    console.log("🤖 Idea Generation Agent Response Complete")
 
-    // Test 4: Full workflow
+    // Test 5: User Story Generation Agent
     console.log("\n" + "=".repeat(60))
-    console.log("TEST 4: Testing Complete Workflow")
+    console.log("TEST 5: Testing User Story Generation Agent")
+    console.log("=".repeat(60))
+
+    const userStoryAgentResult = await testUserStoryGeneratorAgent()
+    console.log("🤖 User Story Generation Agent Response Complete")
+
+    // Test 6: User Story Generation Step
+    console.log("\n" + "=".repeat(60))
+    console.log("TEST 6: Testing User Story Generation Workflow Step")
+    console.log("=".repeat(60))
+
+    await testUserStoryGeneration()
+    console.log("userStoryAgentResult", userStoryAgentResult)
+    console.log("🔄 User Story Generation Step Complete")
+
+    // Test 7: Complete Enhanced Workflow
+    console.log("\n" + "=".repeat(60))
+    console.log("TEST 7: Testing Complete Enhanced Workflow")
     console.log("=".repeat(60))
 
     await testProductDevelopmentWorkflow()
-    console.log("🔄 Workflow Complete")
+    console.log("🔄 Enhanced Workflow Complete")
   } catch (error) {
     console.error("❌ Test failed:", error)
     process.exit(1)
   }
 }
 
-async function testProductDevelopmentWorkflow() {
-  console.log("🚀 Testing Product Development Workflow - Idea Generation Step")
-
-  const workflow = mastra.getWorkflow("productDevelopmentWorkflow")
-
-  if (!workflow) {
-    throw new Error("Workflow not found")
-  }
-
-  const run = await workflow.createRunAsync()
-
-  const result = await run.start({
-    inputData: {
-      rawIdea:
-        "I want to create a habit tracking app that helps people build better daily routines with gamification elements",
-      additionalContext:
-        "Target audience is young professionals who struggle with consistency",
-    },
-  })
-
-  console.log("📊 Workflow Result:")
-  console.log(JSON.stringify(result, null, 2))
-
-  return result
-}
-
 // Run all tests
 main()
   .then(() => {
-    console.log("\n🎉 All tests completed successfully!")
+    console.log("\n🎉 All enhanced tests completed successfully!")
     console.log("\n📋 Summary:")
     console.log("- ✅ Pinecone knowledge base setup")
     console.log("- ✅ Idea Generation Tool working")
     console.log("- ✅ RAG Knowledge Tool working")
+    console.log("- ✅ User Story Generation Tool working")
     console.log("- ✅ Idea Generation Agent responding")
-    console.log("- ✅ Product Development Workflow executing")
-    console.log("\n🚀 Ready to build the next component!")
+    console.log("- ✅ User Story Generation Agent responding")
+    console.log("- ✅ User Story Generation Step executing")
+    console.log("- ✅ Enhanced Product Development Workflow executing")
+    console.log("\n🚀 Ready for the next component: Visual Design Agent!")
+    console.log("\n📊 System Status:")
+    console.log("   Idea Generation → User Stories ✅ COMPLETE")
+    console.log("   Next: User Stories → Wireframes 🔄 READY TO BUILD")
   })
   .catch(error => {
-    console.error("💥 Test suite failed:", error)
+    console.error("💥 Enhanced test suite failed:", error)
     process.exit(1)
   })
