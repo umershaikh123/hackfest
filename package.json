@@ -10,6 +10,7 @@
     "start": "mastra start",
     "test:idea": "tsx src/test/testIdeaGeneration.ts",
     "test:rag": "tsx src/test/testRAGSetup.ts",
+    "test:visual-design": "tsx src/test/testVisualDesign.ts",
     "type-check": "tsc --noEmit"
   },
   "keywords": [],
