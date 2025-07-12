@@ -109,35 +109,47 @@ export const SprintSchema = z.object({
 
 export type Sprint = z.infer<typeof SprintSchema>
 
-// PRD schema
+// PRD schema - Comprehensive format suitable for Notion pages
 export const PRDSchema = z.object({
-  productName: z.string(),
-  version: z.string().default("1.0"),
-  lastUpdated: z.string(),
-  overview: z.object({
-    problemStatement: z.string(),
-    solution: z.string(),
-    targetAudience: z.string(),
-    businessObjectives: z.array(z.string()),
-  }),
-  userPersonas: z.array(UserPersonaSchema),
+  title: z.string().describe("Product name and title"),
+  executiveSummary: z
+    .string()
+    .describe("High-level overview and key value proposition"),
+  problemStatement: z.string().describe("What problem does this solve?"),
+  solutionOverview: z
+    .string()
+    .describe("How does this product solve the problem?"),
   features: z.array(
     z.object({
       name: z.string(),
       description: z.string(),
-      priority: z.enum(["low", "medium", "high", "critical"]),
-      userStories: z.array(z.string()), // References to user story IDs
+      acceptanceCriteria: z.array(z.string()),
+      priority: z.enum(["high", "medium", "low"]),
     })
   ),
-  technicalRequirements: z.object({
-    frontend: z.array(z.string()),
-    backend: z.array(z.string()),
-    database: z.string(),
-    thirdPartyIntegrations: z.array(z.string()),
-  }),
-  successMetrics: z.array(z.string()),
+  userPersonas: z.array(UserPersonaSchema),
+  goalsAndMetrics: z.array(
+    z.object({
+      goal: z.string(),
+      metric: z.string(),
+      target: z.string(),
+    })
+  ),
   assumptions: z.array(z.string()),
   constraints: z.array(z.string()),
+  dependencies: z.array(z.string()),
+  openQuestions: z.array(z.string()),
+  futureConsiderations: z.array(z.string()),
+  technicalOverview: z
+    .string()
+    .optional()
+    .describe("High-level technical approach"),
+  uiUxNotes: z
+    .string()
+    .optional()
+    .describe("User interface and experience notes"),
+  version: z.string().default("1.0"),
+  lastUpdated: z.string(),
 })
 
 export type PRD = z.infer<typeof PRDSchema>

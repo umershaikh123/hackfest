@@ -4,6 +4,7 @@ import { LibSQLStore } from "@mastra/libsql"
 import { Memory } from "@mastra/memory"
 import { ideaGenerationAgent } from "./agents/ideaGenerationAgent"
 import { userStoryGeneratorAgent } from "./agents/userStoryGeneratorAgent"
+import { prdAgent } from "./agents/prdAgent"
 import { productDevelopmentWorkflow } from "./workflows/productDevelopmentWorkflow"
 
 import { pineconeStore, initializePineconeIndex } from "./vectors/pineconeSetup"
@@ -24,6 +25,7 @@ export const mastra = new Mastra({
   agents: {
     ideaGenerationAgent,
     userStoryGeneratorAgent,
+    prdAgent,
     // We'll add more agents here as we build them
   },
   workflows: {

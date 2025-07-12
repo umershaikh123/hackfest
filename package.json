@@ -10,6 +10,7 @@
     "start": "mastra start",
     "test:idea": "tsx src/test/testIdeaGeneration.ts",
     "test:rag": "tsx src/test/testRAGSetup.ts",
+    "test:prd": "tsx src/test/testPRDGeneration.ts",
     "type-check": "tsc --noEmit"
   },
   "keywords": [],
@@ -23,6 +24,7 @@
     "@ai-sdk/anthropic": "^1.2.12",
     "@ai-sdk/google": "^1.2.22",
     "@ai-sdk/openai": "latest",
+    "@anthropic-ai/claude-code": "^1.0.51",
     "@mastra/core": "^0.10.12",
     "@mastra/libsql": "^0.11.0",
     "@mastra/loggers": "^0.10.3",
@@ -30,6 +32,7 @@
     "@mastra/memory": "^0.11.2",
     "@mastra/pinecone": "latest",
     "@mastra/rag": "latest",
+    "@notionhq/client": "^4.0.1",
     "ai": "^4.3.17",
     "dotenv": "^16.0.0",
     "zod": "^3.25.76"

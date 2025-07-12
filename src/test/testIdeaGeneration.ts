@@ -22,7 +22,7 @@ async function main() {
       await populateKnowledgeBase()
       console.log("✅ Knowledge base initialized")
     } catch (error) {
-      console.log("⚠️ Knowledge base initialization failed:", error.message)
+      console.log("⚠️ Knowledge base initialization failed:", error)
       console.log("📝 Continuing with other tests...")
     }
 
@@ -66,7 +66,7 @@ async function main() {
     try {
       await testRAGKnowledgeTool()
     } catch (error) {
-      console.log("⚠️ RAG tool test failed:", error.message)
+      console.log("⚠️ RAG tool test failed:", error)
     }
 
     // Test 3: User Story Generation Tool
