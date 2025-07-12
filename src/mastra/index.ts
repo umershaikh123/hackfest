@@ -4,11 +4,17 @@ import { LibSQLStore } from "@mastra/libsql"
 import { Memory } from "@mastra/memory"
 import { ideaGenerationAgent } from "./agents/ideaGenerationAgent"
 import { userStoryGeneratorAgent } from "./agents/userStoryGeneratorAgent"
+import { prdAgent } from "./agents/prdAgent"
 import { productDevelopmentWorkflow } from "./workflows/productDevelopmentWorkflow"
 
 import { pineconeStore, initializePineconeIndex } from "./vectors/pineconeSetup"
 import "dotenv/config"
-initializePineconeIndex().catch(console.error)
+
+// Initialize Pinecone with better error handling
+initializePineconeIndex().catch((error) => {
+  console.warn("⚠️ Pinecone initialization failed - RAG features will be unavailable:", error.message)
+  // Don't throw error to prevent blocking the entire application
+})
 
 const storage = new LibSQLStore({
   url: process.env.DATABASE_URL || "file:./product-maestro.db",
@@ -24,6 +30,7 @@ export const mastra = new Mastra({
   agents: {
     ideaGenerationAgent,
     userStoryGeneratorAgent,
+    prdAgent,
     // We'll add more agents here as we build them
   },
   workflows: {

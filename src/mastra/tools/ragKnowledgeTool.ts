@@ -72,7 +72,7 @@ export const ragKnowledgeTool = createTool({
       console.error("RAG Knowledge Tool Error:", error)
       return {
         results: [],
-        summary: `Error searching knowledge base: ${error.message}`,
+        summary: `Error searching knowledge base: ${error}`,
       }
     }
   },
@@ -203,7 +203,7 @@ export async function testRAGKnowledgeTool() {
       console.log(`✅ Found ${result.results.length} results`)
       console.log(`📄 Summary: ${result.summary.substring(0, 100)}...`)
     } catch (error) {
-      console.log(`❌ Query failed: ${error.message}`)
+      console.log(`❌ Query failed: ${error}`)
     }
   }
 
