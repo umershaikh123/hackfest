@@ -1,18 +1,22 @@
-import { Mastra } from "@mastra/core/mastra"
-import { PinoLogger } from "@mastra/loggers"
-import { LibSQLStore } from "@mastra/libsql"
-import { Memory } from "@mastra/memory"
-import { ideaGenerationAgent } from "./agents/ideaGenerationAgent"
-import { userStoryGeneratorAgent } from "./agents/userStoryGeneratorAgent"
-import { productDevelopmentWorkflow } from "./workflows/productDevelopmentWorkflow"
+import { Mastra } from "@mastra/core/mastra";
+import { PinoLogger } from "@mastra/loggers";
+import { LibSQLStore } from "@mastra/libsql";
+import { Memory } from "@mastra/memory";
+import { ideaGenerationAgent } from "./agents/ideaGenerationAgent";
+import { userStoryGeneratorAgent } from "./agents/userStoryGeneratorAgent";
+import { productDevelopmentWorkflow } from "./workflows/productDevelopmentWorkflow";
 
-import { pineconeStore, initializePineconeIndex } from "./vectors/pineconeSetup"
-import "dotenv/config"
-initializePineconeIndex().catch(console.error)
+import {
+  pineconeStore,
+  initializePineconeIndex,
+} from "./vectors/pineconeSetup";
+import "dotenv/config";
+import { visualDesignAgent } from "./agents";
+initializePineconeIndex().catch(console.error);
 
 const storage = new LibSQLStore({
   url: process.env.DATABASE_URL || "file:./product-maestro.db",
-})
+});
 
 // const pineconeStore = new PineconeStore({
 //   apiKey: process.env.PINECONE_API_KEY!,
@@ -24,6 +28,7 @@ export const mastra = new Mastra({
   agents: {
     ideaGenerationAgent,
     userStoryGeneratorAgent,
+    visualDesignAgent,
     // We'll add more agents here as we build them
   },
   workflows: {
@@ -36,4 +41,4 @@ export const mastra = new Mastra({
     name: "ProductMaestro",
     level: "info",
   }),
-})
+});
