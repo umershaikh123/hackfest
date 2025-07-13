@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Send, Bot, User, Zap, Rocket } from "lucide-react"
 import { AgentType } from "@/lib/agents"
+import ReactMarkdown from "react-markdown"
 
 interface Message {
   id: string
@@ -253,10 +254,7 @@ export function ChatInterface({
                 }
                 className="h-auto p-3 flex flex-col items-center gap-2 btn-hover  loading-pulse"
               >
-                <Zap
-                  className="w-4 h-4 "
-                  style={{ animationDelay: "0.4s" }}
-                />
+                <Zap className="w-4 h-4 " style={{ animationDelay: "0.4s" }} />
                 <span className="text-xs">Sequential</span>
               </Button>
             </div>
@@ -304,7 +302,39 @@ export function ChatInterface({
                           : "bg-muted text-muted-foreground border border-border hover:bg-muted/80"
                     }`}
                   >
-                    <div className="whitespace-pre-wrap">{message.content}</div>
+                    <ReactMarkdown
+                      // className="prose prose-sm max-w-none dark:prose-invert [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                      components={{
+                        ul: props => (
+                          <ul
+                            className="list-disc list-inside space-y-1 my-2"
+                            {...props}
+                          />
+                        ),
+                        ol: props => (
+                          <ol
+                            className="list-decimal list-inside space-y-1 my-2"
+                            {...props}
+                          />
+                        ),
+                        li: props => <li className="text-current" {...props} />,
+                        p: props => <p className="mb-3 last:mb-0" {...props} />,
+                        strong: props => (
+                          <strong
+                            className="font-semibold text-current"
+                            {...props}
+                          />
+                        ),
+                        code: props => (
+                          <code
+                            className="bg-muted px-1 py-0.5 rounded text-sm"
+                            {...props}
+                          />
+                        ),
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
                     {message.agentType && message.metadata && (
                       <div className="mt-2 flex gap-2">
                         <Badge variant="secondary" className="text-xs">
@@ -332,7 +362,7 @@ export function ChatInterface({
                   </Avatar>
                   <div className="bg-muted text-muted-foreground border border-border rounded-lg p-4 loading-pulse">
                     <div className="flex items-center space-x-2">
-                      <span className="gradient-text">
+                      <span className="">
                         {currentAgent
                           ? `${getAgentIcon(currentAgent)} ${currentAgent.replace("-", " ")} is processing`
                           : "AI agents are analyzing"}
@@ -356,6 +386,12 @@ export function ChatInterface({
           <Textarea
             value={input}
             onChange={e => setInput(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                handleSubmit(e as any)
+              }
+            }}
             placeholder="Describe your product idea or ask for specific help..."
             className="flex-1 min-h-[60px] resize-none bg-input border-border focus:ring-primary smooth-transition hover:border-primary/50 focus:border-primary"
             disabled={loading}
