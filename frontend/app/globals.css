@@ -144,6 +144,7 @@ body {
   background: linear-gradient(135deg, hsl(var(--muted)), hsl(var(--accent)));
 }
 
+/* Enhanced animations */
 @keyframes typing {
   0%,
   20% {
@@ -157,6 +158,80 @@ body {
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(131, 126, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(131, 126, 255, 0.8);
+  }
+}
+
+@keyframes bounce-soft {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 .typing-indicator span {
   animation: typing 1.4s infinite;
 }
@@ -167,4 +242,60 @@ body {
 
 .typing-indicator span:nth-child(3) {
   animation-delay: 0.4s;
+}
+
+/* Message animations */
+.message-enter {
+  animation: fade-in 0.4s ease-out, slide-in-left 0.4s ease-out;
+}
+
+.message-enter-user {
+  animation: fade-in 0.4s ease-out, slide-in-right 0.4s ease-out;
+}
+
+/* Button hover effects */
+.btn-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Card animations */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading animations */
+.loading-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.loading-bounce {
+  animation: bounce-soft 1s ease-in-out infinite;
+}
+
+/* Gradient animations */
+.animated-gradient {
+  background-size: 200% 200%;
+  animation: gradient-flow 3s ease infinite;
+}
+
+/* Smooth transitions */
+.smooth-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced glassmorphism */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }

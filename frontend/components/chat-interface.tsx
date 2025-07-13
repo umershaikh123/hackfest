@@ -60,12 +60,10 @@ export function ChatInterface({
   const messages = conversation?.messages || []
   const loading = conversation?.isLoading || isLoading
 
-  // Debug logging
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    console.log("ChatInterface - messages updated:", messages.length, messages)
-    console.log("ChatInterface - loading state:", loading)
-    console.log("ChatInterface - conversation object:", conversation)
-  }, [messages, loading, conversation])
+    scrollToBottom()
+  }, [messages.length])
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -77,10 +75,6 @@ export function ChatInterface({
       }
     }
   }
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
 
   const detectIntentAndAgent = (
     input: string
@@ -187,14 +181,14 @@ export function ChatInterface({
     <div className="flex flex-col h-full  ">
       <ScrollArea ref={scrollAreaRef} className="flex-1 p-6">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
-            <Avatar className="w-16 h-16">
-              <AvatarFallback className="bg-primary text-primary-foreground">
+          <div className="flex flex-col items-center justify-center h-full text-center space-y-6 message-enter">
+            <Avatar className="w-16 h-16 ">
+              <AvatarFallback className="bg-primary text-primary-foreground animated-gradient">
                 <Bot className="w-8 h-8" />
               </AvatarFallback>
             </Avatar>
             <div className="space-y-2">
-              <h3 className="text-xl font-semibold">
+              <h3 className="text-xl font-semibold gradient-text">
                 👋 Hello! I'm your AI Product Manager
               </h3>
               <p className="text-muted-foreground max-w-md">
@@ -208,27 +202,31 @@ export function ChatInterface({
                 variant="outline"
                 size="sm"
                 onClick={() => handleAgentSuggestion("idea-generation")}
-                className="h-auto p-3 flex flex-col items-center gap-2"
+                className="h-auto p-3 flex flex-col items-center gap-2 btn-hover "
               >
-                <span className="text-lg">💡</span>
+                <span className="text-lg ">💡</span>
                 <span className="text-xs">Refine Idea</span>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleAgentSuggestion("user-story")}
-                className="h-auto p-3 flex flex-col items-center gap-2"
+                className="h-auto p-3 flex flex-col items-center gap-2 btn-hover "
               >
-                <span className="text-lg">📝</span>
+                <span className="text-lg " style={{ animationDelay: "0.1s" }}>
+                  📝
+                </span>
                 <span className="text-xs">User Stories</span>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleAgentSuggestion("prd")}
-                className="h-auto p-3 flex flex-col items-center gap-2"
+                className="h-auto p-3 flex flex-col items-center gap-2 btn-hover "
               >
-                <span className="text-lg">📋</span>
+                <span className="text-lg " style={{ animationDelay: "0.2s" }}>
+                  📋
+                </span>
                 <span className="text-xs">Create PRD</span>
               </Button>
               <Button
@@ -237,19 +235,27 @@ export function ChatInterface({
                 onClick={() =>
                   onWorkflowRun?.("Complete product development workflow")
                 }
-                className="h-auto p-3 flex flex-col items-center gap-2"
+                className="h-auto p-3 flex flex-col items-center gap-2 btn-hover  loading-pulse"
               >
-                <Rocket className="w-4 h-4" />
+                <Rocket
+                  className="w-4 h-4 "
+                  style={{ animationDelay: "0.3s" }}
+                />
                 <span className="text-xs">Full Workflow</span>
               </Button>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
-            {messages.map(message => (
+            {messages.map((message, index) => (
               <div
                 key={message.id}
-                className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex ${message.type === "user" ? "justify-end" : "justify-start"} ${
+                  message.type === "user"
+                    ? "message-enter-user"
+                    : "message-enter"
+                }`}
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div
                   className={`flex items-start space-x-3 max-w-[80%] ${message.type === "user" ? "flex-row-reverse space-x-reverse" : ""}`}
@@ -274,12 +280,12 @@ export function ChatInterface({
                     </AvatarFallback>
                   </Avatar>
                   <div
-                    className={`rounded-lg p-4 ${
+                    className={`rounded-lg p-4 smooth-transition   ${
                       message.type === "user"
-                        ? "chat-gradient text-primary-foreground"
+                        ? "chat-gradient text-primary-foreground shadow-lg hover:shadow-xl"
                         : message.type === "system"
-                          ? "bg-muted text-muted-foreground border border-border"
-                          : "bg-muted text-muted-foreground border border-border"
+                          ? "bg-muted text-muted-foreground border border-border hover:bg-muted/80"
+                          : "bg-muted text-muted-foreground border border-border hover:bg-muted/80"
                     }`}
                   >
                     <div className="whitespace-pre-wrap">{message.content}</div>
@@ -301,16 +307,16 @@ export function ChatInterface({
               </div>
             ))}
             {loading && (
-              <div className="flex justify-start">
+              <div className="flex justify-start message-enter">
                 <div className="flex items-start space-x-3 max-w-[80%]">
-                  <Avatar className="w-8 h-8 flex-shrink-0">
-                    <AvatarFallback className="bg-muted">
-                      <Bot className="w-4 h-4" />
+                  <Avatar className="w-8 h-8 flex-shrink-0 loading-pulse">
+                    <AvatarFallback className="bg-muted animated-gradient">
+                      <Bot className="w-4 h-4 " />
                     </AvatarFallback>
                   </Avatar>
-                  <div className="bg-muted text-muted-foreground border border-border rounded-lg p-4">
+                  <div className="bg-muted text-muted-foreground border border-border rounded-lg p-4 loading-pulse">
                     <div className="flex items-center space-x-2">
-                      <span>
+                      <span className="gradient-text">
                         {currentAgent
                           ? `${getAgentIcon(currentAgent)} ${currentAgent.replace("-", " ")} is processing`
                           : "AI agents are analyzing"}
@@ -329,24 +335,26 @@ export function ChatInterface({
         )}
       </ScrollArea>
 
-      <div className="p-6 border-t border-border">
+      <div className="p-6 border-t border-border bg-gradient-to-r from-background/50 to-background/80 backdrop-blur-sm">
         <form onSubmit={handleSubmit} className="flex space-x-4">
           <Textarea
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder="Describe your product idea or ask for specific help..."
-            className="flex-1 min-h-[60px] resize-none bg-input border-border focus:ring-primary"
+            className="flex-1 min-h-[60px] resize-none bg-input border-border focus:ring-primary smooth-transition hover:border-primary/50 focus:border-primary"
             disabled={loading}
           />
           <Button
             type="submit"
             disabled={!input.trim() || loading}
-            className="chat-gradient text-primary-foreground hover:opacity-90 transition-opacity px-6"
+            className={`chat-gradient text-primary-foreground px-6 btn-hover ${
+              loading ? "loading-pulse" : ""
+            } ${input.trim()}`}
           >
-            <Send className="w-4 h-4" />
+            <Send className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
         </form>
-        <div className="mt-2 text-xs text-muted-foreground">
+        <div className="mt-2 text-xs text-muted-foreground animate-pulse">
           Try: "Create user stories", "Generate PRD", "Plan sprints", or "Run
           complete workflow"
         </div>

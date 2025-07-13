@@ -258,13 +258,13 @@ function ProductMaestroApp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5  ">
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
+      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm  ">
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold gradient-text">
+            <div className="space-y-2 message-enter">
+              <h1 className="text-4xl font-bold gradient-text ">
                 🚀 Product Maestro
               </h1>
               <h2 className="text-xl text-muted-foreground">
@@ -275,12 +275,18 @@ function ProductMaestroApp() {
                 intelligent AI agents
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <ThemeSwitcher />
+            <div
+              className="flex items-center gap-4 message-enter"
+              style={{ animationDelay: "0.2s" }}
+            >
+              <div className="smooth-transition  ">
+                <ThemeSwitcher />
+              </div>
               <Button
                 variant="outline"
                 onClick={conversation.clearConversation}
                 disabled={workflow.isAnyGenerating}
+                className="btn-hover"
               >
                 New Session
               </Button>

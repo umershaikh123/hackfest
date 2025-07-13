@@ -67,7 +67,7 @@ export function ResultsDashboard({
         return (
           <Badge
             variant="default"
-            className="bg-green-500/20 text-green-400 border-green-500/30"
+            className="bg-green-500/20 text-green-400 border-green-500/30 loading-pulse smooth-transition  "
           >
             ✅ Completed
           </Badge>
@@ -237,15 +237,22 @@ export function ResultsDashboard({
   }
 
   return (
-    <div className="space-y-6 max-h-[100vh]  overflow-auto">
+    <div className="space-y-6 max-h-[100vh] overflow-auto">
       {/* Artifacts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {artifactItems.map(artifact => {
+        {artifactItems.map((artifact, index) => {
           const status = getArtifactStatus(artifact.data)
           return (
             <Card
               key={artifact.key}
-              className="hover:bg-card/80 transition-all duration-200"
+              className={` glassmorphism smooth-transition message-enter ${
+                status === "completed"
+                  ? "border-green-500/50 shadow-green-500/20"
+                  : status === "pending"
+                    ? "border-yellow-500/50"
+                    : "border-border/50"
+              }`}
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
