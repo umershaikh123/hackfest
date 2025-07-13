@@ -1,5 +1,6 @@
 // src/mastra/agents/visualDesignAgent.ts - The Visual Strategist Agent
 import { Agent } from "@mastra/core"
+import { google } from "@ai-sdk/google"
 import { visualDesignTool } from "../tools/visualDesignTool.js"
 import { ragKnowledgeTool } from "../tools/ragKnowledgeTool.js"
 import "dotenv/config"
@@ -75,11 +76,7 @@ export const visualDesignAgent = new Agent({
 
     Remember: Exceptional visuals don't just communicate—they inspire, persuade, and align teams around a shared vision. Your designs should be so compelling and professional that stakeholders immediately understand both the content and the strategic thinking behind it. Create visual artifacts that teams will be proud to use in presentations, planning sessions, and strategic discussions.
   `,
-  model: {
-    provider: "google",
-    name: "gemini-2.0-flash-exp",
-    toolChoice: "auto",
-  },
+  model: google("gemini-2.0-flash"),
   tools: {
     visualDesignTool,
     ragKnowledgeTool,

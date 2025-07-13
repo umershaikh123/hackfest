@@ -31,7 +31,7 @@ A single, conversational interface that guides PMs from raw ideas to comprehensi
 - **The Story Weaver** - Generates comprehensive user stories with acceptance criteria
 - **The PRD Compiler** - Creates detailed Product Requirements Documents
 - **The Sprint Architect** - Creates development sprint plans with Linear integration
-- **Visual Design Agent** *(Coming Soon)* - Generates wireframes using Shadcn/UI components
+- **The Visual Strategist** - Creates stunning visual wireframes and user journey maps with Miro integration
 
 ### 💬 **Conversational Product Development**
 - Natural language interaction for non-technical users
@@ -51,11 +51,13 @@ A single, conversational interface that guides PMs from raw ideas to comprehensi
 - Smart task breakdown and effort estimation
 - Risk assessment and development recommendations
 
-### 🎨 **Dynamic Visual Design** *(In Development)*
-- Real-time wireframe generation from requirements
-- Interactive mockups using Shadcn/UI components
-- Conversational design refinement ("Make the button green", "Add a comments section")
-- No-code visual feedback loop
+### 🎨 **Professional Visual Design & Miro Integration**
+- Stunning user journey maps with emotional states and decision points
+- Beautiful process workflow diagrams and system architecture visualizations
+- Professional persona cards with modern design elements
+- Interactive Miro boards for stakeholder collaboration
+- Smart positioning and layout management for clean visual hierarchy
+- Web SDK integration ready for advanced browser-based features
 
 ### 🔍 **Intelligent Knowledge Retrieval**
 - RAG (Retrieval Augmented Generation) system with Pinecone
@@ -81,8 +83,8 @@ A single, conversational interface that guides PMs from raw ideas to comprehensi
 
 ### **Data & Integration**
 - **Database**: LibSQL for conversation memory and session tracking
-- **External APIs**: Notion integration for PRD publishing
-- **RAG System**: Product management knowledge base
+- **External APIs**: Notion integration for PRD publishing, Linear API for sprint management, Miro API for visual design
+- **RAG System**: Product management knowledge base with Pinecone vector storage
 - **Real-time Processing**: Streaming responses and live updates
 
 ### **Frontend** *(Next Phase)*
@@ -118,6 +120,7 @@ cp .env.example .env
 # - NOTION_PRD_DATABASE_ID
 # - LINEAR_API_KEY (optional, for sprint planning)
 # - LINEAR_TEAM_ID (optional, for sprint planning)
+# - MIRO_API_KEY (optional, for visual design)
 # - Google AI API key
 ```
 
@@ -149,6 +152,9 @@ npm run test:rag
 # Test sprint planning with Linear
 npm run test:sprint
 
+# Test visual design with Miro
+npm run test:visual
+
 # End-to-end PRD generation
 npx tsx src/test/testEndToEnd.ts
 ```
@@ -164,9 +170,11 @@ npx tsx src/test/testEndToEnd.ts
 4. **PRD Creation**: Generates comprehensive 100+ block PRD
 5. **Notion Publishing**: Automatically publishes formatted PRD
 6. **Sprint Planning**: Creates development sprints with Linear integration
+7. **Visual Design**: Generates beautiful user journey maps and wireframes in Miro
 
-### Sample Generated PRD
+### Sample Generated Artifacts
 🔗 [View Live PRD Example](https://notion.so/22e706f0b83a815fa4cdc0daa4d69e75)
+🎨 [View Live Visual Design Example](https://miro.com/app/board/uXjVJeytRqY=)
 
 ---
 
@@ -207,20 +215,22 @@ npx tsx src/test/testEndToEnd.ts
 - ✅ User Story Generator with priority assignment
 - ✅ PRD Compiler with comprehensive content generation
 - ✅ Sprint Planner Agent with Linear integration
+- ✅ Visual Design Agent with Miro integration and professional wireframes
 - ✅ Notion integration with automatic publishing
 - ✅ RAG system with Pinecone knowledge base
 - ✅ End-to-end testing pipeline
 
 ### 🚧 **In Development**
-- 🚧 Visual Design Agent for wireframe generation
 - 🚧 Next.js conversational frontend
 - 🚧 Real-time chat interface
+- 🚧 Router/Feedback Analysis Agent for iterative refinement
 
 ### 🎯 **Roadmap**
 - Voice mode for hands-free interaction
-- Advanced visual design capabilities
-- Integration with project management tools
+- Advanced Miro Web SDK browser integration
+- Integration with additional project management tools
 - Competitive analysis features
+- Multi-modal AI inputs (voice, image, document upload)
 
 ---
 
@@ -273,7 +283,7 @@ npx tsx src/test/testEndToEnd.ts
 2. **Technical Excellence** - Sophisticated multi-agent architecture with production-ready code
 3. **Real Business Value** - Solves actual pain points faced by product teams daily
 4. **Scalable Architecture** - Built for extensibility and enterprise adoption
-5. **Live Working Demo** - Functional system generating real Notion PRDs and Linear sprints
+5. **Live Working Demo** - Functional system generating real Notion PRDs, Linear sprints, and stunning Miro visual designs
 
 **Product Maestro isn't just a concept—it's a working revolution in product management.**
 

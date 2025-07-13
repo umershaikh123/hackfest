@@ -3,13 +3,64 @@ import { createTool } from "@mastra/core/tools"
 import { z } from "zod"
 import "dotenv/config"
 
+// Position Manager for better element layout
+class PositionManager {
+  private currentX = 0
+  private currentY = 0
+  private columnWidth = 300
+  private rowHeight = 250
+  private maxColumns = 4
+
+  getNextPosition(type: 'header' | 'persona' | 'feature' | 'journey' | 'process' = 'feature') {
+    let position
+    
+    switch (type) {
+      case 'header':
+        position = { x: 0, y: -400 }
+        break
+      case 'persona':
+        position = { x: this.currentX, y: -200 }
+        this.currentX += this.columnWidth
+        if (this.currentX >= this.maxColumns * this.columnWidth) {
+          this.currentX = 0
+          this.currentY += this.rowHeight
+        }
+        break
+      case 'journey':
+        position = { x: this.currentX, y: 200 }
+        this.currentX += this.columnWidth
+        break
+      case 'process':
+        position = { x: this.currentX, y: 400 }
+        this.currentX += this.columnWidth
+        break
+      default:
+        position = { x: this.currentX, y: this.currentY }
+        this.currentX += this.columnWidth
+        if (this.currentX >= this.maxColumns * this.columnWidth) {
+          this.currentX = 0
+          this.currentY += this.rowHeight
+        }
+    }
+    
+    return position
+  }
+  
+  reset() {
+    this.currentX = 0
+    this.currentY = 0
+  }
+}
+
 // Miro API Integration
 class MiroAPIClient {
   private apiKey: string
   private baseUrl = "https://api.miro.com/v2"
+  private positionManager: PositionManager
 
   constructor(apiKey: string) {
     this.apiKey = apiKey
+    this.positionManager = new PositionManager()
   }
 
   private async request(endpoint: string, method: string = "GET", data?: any) {
@@ -23,7 +74,17 @@ class MiroAPIClient {
     })
 
     if (!response.ok) {
-      throw new Error(`Miro API error: ${response.status} ${response.statusText}`)
+      const errorText = await response.text()
+      let errorDetails = ""
+      try {
+        const errorJson = JSON.parse(errorText)
+        if (errorJson.context && errorJson.context.fields) {
+          errorDetails = errorJson.context.fields.map((f: any) => `${f.field}: ${f.message}`).join(", ")
+        }
+      } catch {
+        errorDetails = errorText
+      }
+      throw new Error(`Miro API error: ${response.status} ${response.statusText} - ${errorDetails}`)
     }
 
     return response.json()
@@ -41,17 +102,21 @@ class MiroAPIClient {
   // Create different types of Miro items based on type
   async createWorkflowItems(boardId: string, items: any[]) {
     const results = []
+    this.positionManager.reset() // Reset positioning for new board
     
     for (const item of items) {
       try {
         let result
         const cleanContent = item.data.content?.replace(/<[^>]*>/g, '') || item.title || "Element"
         
+        // Use smart positioning if no position provided
+        const position = item.position || this.positionManager.getNextPosition(item.layoutType || 'feature')
+        
         switch (item.type) {
           case "sticky_note":
             result = await this.createStickyNote(boardId, {
               content: cleanContent,
-              position: item.position,
+              position: position,
               style: item.style
             })
             break
@@ -59,7 +124,7 @@ class MiroAPIClient {
           case "shape":
             result = await this.createShape(boardId, {
               content: cleanContent,
-              position: item.position,
+              position: position,
               geometry: item.geometry,
               style: item.style,
               shape: item.shape || "rectangle"
@@ -69,7 +134,7 @@ class MiroAPIClient {
           case "text":
             result = await this.createText(boardId, {
               content: cleanContent,
-              position: item.position,
+              position: position,
               geometry: item.geometry,
               style: item.style
             })
@@ -79,7 +144,7 @@ class MiroAPIClient {
             result = await this.createCard(boardId, {
               title: item.title || "Card",
               description: cleanContent,
-              position: item.position,
+              position: position,
               style: item.style
             })
             break
@@ -88,7 +153,7 @@ class MiroAPIClient {
             // Default to sticky note for unknown types
             result = await this.createStickyNote(boardId, {
               content: cleanContent,
-              position: item.position,
+              position: position,
               style: item.style
             })
         }
@@ -121,7 +186,7 @@ class MiroAPIClient {
   async createStickyNote(boardId: string, options: any) {
     const payload = {
       data: {
-        content: options.content.substring(0, 6000), // Miro limit
+        content: (options.content || "Visual Element").substring(0, 6000), // Miro limit
         shape: "square"
       },
       position: {
@@ -130,7 +195,7 @@ class MiroAPIClient {
         origin: "center"
       },
       style: {
-        fillColor: this.getMiroColor(options.style?.fillColor) || "light_yellow",
+        fillColor: this.getMiroColor(options.style?.fillColor, 'sticky_note') || "light_yellow",
         textAlign: "center",
         textAlignVertical: "top"
       }
@@ -138,10 +203,10 @@ class MiroAPIClient {
     return this.request(`/boards/${boardId}/sticky_notes`, "POST", payload)
   }
   
-  // Map our colors to Miro's supported colors - Miro accepts hex colors directly for shapes/text
-  getMiroColor(color: string): string {
-    // For sticky notes, we need to map to Miro's named colors
-    const stickyNoteColorMap: Record<string, string> = {
+  // Map our colors to Miro's supported colors
+  getMiroColor(color: string, elementType: 'sticky_note' | 'card' | 'shape' | 'text' = 'sticky_note'): string {
+    // Miro's supported named colors for sticky notes and cards
+    const namedColorMap: Record<string, string> = {
       "#fff9c4": "light_yellow",
       "#ffeb3b": "yellow",
       "#ff9800": "orange", 
@@ -151,16 +216,24 @@ class MiroAPIClient {
       "#9c27b0": "violet",
       "#f44336": "red",
       "#2196f3": "blue",
-      "#607d8b": "gray"
+      "#607d8b": "gray",
+      "#ffcdd2": "light_pink",
+      "#c8e6c9": "light_green",
+      "#bbdefb": "light_blue"
     }
     
-    // For shapes and text, Miro accepts hex colors directly
-    if (color && color.startsWith('#')) {
+    // For sticky notes and cards, use named colors only
+    if (elementType === 'sticky_note' || elementType === 'card') {
+      return namedColorMap[color] || "light_yellow"
+    }
+    
+    // For shapes and text, prefer hex colors but validate format
+    if (color && color.startsWith('#') && /^#[0-9A-F]{6}$/i.test(color)) {
       return color
     }
     
-    // Fallback to mapped color for sticky notes
-    return stickyNoteColorMap[color] || color || "#ffffff"
+    // Fallback to mapped color or default
+    return namedColorMap[color] || "#ffffff"
   }
   
   // Create shape
@@ -168,13 +241,12 @@ class MiroAPIClient {
     const payload = {
       data: {
         shape: options.shape || "rectangle",
-        content: options.content.substring(0, 6000)
+        content: (options.content || "Shape").substring(0, 6000)
       },
       position: {
         x: options.position.x,
         y: options.position.y,
-        origin: "center",
-        relativeTo: "canvas_center"
+        origin: "center"
       },
       geometry: {
         width: options.geometry?.width || 200,
@@ -182,11 +254,11 @@ class MiroAPIClient {
         rotation: 0
       },
       style: {
-        fillColor: this.getMiroColor(options.style?.fillColor) || "#ffffff",
+        fillColor: this.getMiroColor(options.style?.fillColor, 'shape') || "#ffffff",
         fillOpacity: 1.0,
-        strokeColor: this.getMiroColor(options.style?.borderColor) || "#1a73e8",
-        strokeStyle: "normal",
-        strokeWidth: Math.min(options.style?.borderWidth || 2, 24),
+        borderColor: this.getMiroColor(options.style?.borderColor, 'shape') || "#1a73e8",
+        borderStyle: "normal",
+        borderWidth: Math.min(options.style?.borderWidth || 2, 24),
         fontFamily: "arial",
         fontSize: Math.min(options.style?.fontSize || 14, 96),
         textAlign: "center",
@@ -200,22 +272,19 @@ class MiroAPIClient {
   async createText(boardId: string, options: any) {
     const payload = {
       data: {
-        content: options.content.substring(0, 6000)
+        content: (options.content || "Text").substring(0, 6000)
       },
       position: {
         x: options.position.x,
         y: options.position.y,
-        origin: "center",
-        relativeTo: "canvas_center"
+        origin: "center"
       },
       geometry: {
-        width: options.geometry?.width || 320,
-        height: options.geometry?.height || 60,
-        rotation: 0
+        width: options.geometry?.width || 320
       },
       style: {
         color: "#1a1a1a",
-        fillColor: this.getMiroColor(options.style?.fillColor) || "#ffffff",
+        fillColor: this.getMiroColor(options.style?.fillColor, 'text') || "#ffffff",
         fillOpacity: 1.0,
         fontFamily: "arial",
         fontSize: Math.min(options.style?.fontSize || 16, 96),
@@ -235,11 +304,7 @@ class MiroAPIClient {
       position: {
         x: options.position.x,
         y: options.position.y,
-        origin: "center",
-        relativeTo: "canvas_center"
-      },
-      style: {
-        fillColor: this.getStickyNoteColor(options.style?.fillColor) || "light_yellow"
+        origin: "center"
       }
     }
     return this.request(`/boards/${boardId}/cards`, "POST", payload)
