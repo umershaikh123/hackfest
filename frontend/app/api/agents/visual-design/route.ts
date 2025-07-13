@@ -1,36 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { visualDesignAgent } from '@/src/mastra/agents/visualDesignAgent';
 
 export async function POST(request: NextRequest) {
   try {
-    const { productIdea, userStories, sessionId } = await request.json();
+    const { message, context, sessionId } = await request.json();
 
-    if (!productIdea || !userStories) {
+    if (!message) {
       return NextResponse.json(
-        { error: 'Product idea and user stories are required' },
+        { error: 'Message is required' },
         { status: 400 }
       );
     }
 
-    const result = await visualDesignAgent.generate(
-      `Please generate visual design for this product: ${JSON.stringify(productIdea)} with user stories: ${JSON.stringify(userStories)}`,
-      {
-        threadId: sessionId || `thread-${Date.now()}`
-      }
-    );
+    // Simulate processing time
+    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2500));
+
+    // Mock visual design response
+    const mockResponse = {
+      boardId: 'miro-board-123',
+      boardUrl: 'https://miro.com/app/board/mock-board-123',
+      artifacts: [
+        {
+          type: 'user-journey' as const,
+          elementCount: 8,
+          description: 'Complete user journey map showing key touchpoints'
+        },
+        {
+          type: 'wireframe' as const,
+          elementCount: 12,
+          description: 'Low-fidelity wireframes for main application screens'
+        },
+        {
+          type: 'process-flow' as const,
+          elementCount: 6,
+          description: 'Process flow diagram showing system interactions'
+        }
+      ]
+    };
 
     return NextResponse.json({
       success: true,
-      data: result,
-      sessionId: sessionId || `session-${Date.now()}`
+      data: mockResponse,
+      metadata: {
+        agentType: 'visual-design',
+        processingTime: 3200,
+        confidence: 0.88,
+        sessionId: sessionId || `session-${Date.now()}`
+      }
     });
 
   } catch (error) {
     console.error('Visual design error:', error);
     return NextResponse.json(
       { 
+        success: false,
         error: 'Failed to generate visual design',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        metadata: {
+          agentType: 'visual-design',
+          processingTime: 0,
+          confidence: 0
+        }
       },
       { status: 500 }
     );

@@ -1,36 +1,81 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sprintPlannerAgent } from '@/src/mastra/agents/sprintPlannerAgent';
 
 export async function POST(request: NextRequest) {
   try {
-    const { productIdea, userStories, sessionId } = await request.json();
+    const { message, context, sessionId } = await request.json();
 
-    if (!productIdea || !userStories) {
+    if (!message) {
       return NextResponse.json(
-        { error: 'Product idea and user stories are required' },
+        { error: 'Message is required' },
         { status: 400 }
       );
     }
 
-    const result = await sprintPlannerAgent.generate(
-      `Please generate sprint plan for this product: ${JSON.stringify(productIdea)} with user stories: ${JSON.stringify(userStories)}`,
-      {
-        threadId: sessionId || `thread-${Date.now()}`
-      }
-    );
+    // Simulate processing time
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+
+    // Mock sprint planner response
+    const mockResponse = {
+      sprints: [
+        {
+          id: 'sprint-1',
+          name: 'Foundation Sprint',
+          duration: 14,
+          tasks: [
+            {
+              title: 'Set up project structure',
+              description: 'Initialize repository and basic configuration',
+              effort: 8,
+              dependencies: []
+            },
+            {
+              title: 'Core authentication system',
+              description: 'Implement user login and registration',
+              effort: 13,
+              dependencies: ['Set up project structure']
+            }
+          ]
+        },
+        {
+          id: 'sprint-2',
+          name: 'Feature Development Sprint',
+          duration: 14,
+          tasks: [
+            {
+              title: 'Main dashboard implementation',
+              description: 'Build the primary user interface',
+              effort: 21,
+              dependencies: ['Core authentication system']
+            }
+          ]
+        }
+      ],
+      linearCycleId: 'cycle-mock-123',
+      linearUrl: 'https://linear.app/mock-workspace/cycle/mock-123'
+    };
 
     return NextResponse.json({
       success: true,
-      data: result,
-      sessionId: sessionId || `session-${Date.now()}`
+      data: mockResponse,
+      metadata: {
+        agentType: 'sprint-planner',
+        processingTime: 2500,
+        confidence: 0.85,
+        sessionId: sessionId || `session-${Date.now()}`
+      }
     });
 
   } catch (error) {
     console.error('Sprint planning error:', error);
     return NextResponse.json(
       { 
+        success: false,
         error: 'Failed to generate sprint plan',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        metadata: {
+          agentType: 'sprint-planner',
+          processingTime: 0,
+          confidence: 0
+        }
       },
       { status: 500 }
     );

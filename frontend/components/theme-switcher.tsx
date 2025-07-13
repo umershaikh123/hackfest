@@ -1,6 +1,12 @@
 "use client"
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useTheme } from "./theme-provider"
 
 const themes = [
@@ -15,12 +21,12 @@ export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme()
 
   return (
-    <Select value={theme} onValueChange={(value) => setTheme(value as any)}>
+    <Select value={theme} onValueChange={value => setTheme(value as any)}>
       <SelectTrigger className="w-[180px] bg-card border-border">
         <SelectValue placeholder="Select theme" />
       </SelectTrigger>
       <SelectContent>
-        {themes.map((themeOption) => (
+        {themes.map(themeOption => (
           <SelectItem key={themeOption.value} value={themeOption.value}>
             {themeOption.label}
           </SelectItem>

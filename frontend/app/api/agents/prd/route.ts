@@ -1,36 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prdAgent } from '@/src/mastra/agents/prdAgent';
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
-    const { productIdea, userStories, sessionId } = await request.json();
+    const body = await request.json();
+    const { message, context, sessionId } = body;
 
-    if (!productIdea || !userStories) {
+    if (!message) {
       return NextResponse.json(
-        { error: 'Product idea and user stories are required' },
+        { 
+          success: false,
+          error: 'Message is required',
+          metadata: {
+            agentType: 'prd',
+            processingTime: 0,
+            confidence: 0,
+          }
+        },
         { status: 400 }
       );
     }
 
-    const result = await prdAgent.generate(
-      `Please generate a PRD for this product: ${JSON.stringify(productIdea)} with user stories: ${JSON.stringify(userStories)}`,
-      {
-        threadId: sessionId || `thread-${Date.now()}`
-      }
-    );
+    // Mock PRD response
+    const mockResponse = {
+      prdId: `prd-${Date.now()}`,
+      notionPageId: 'mock-notion-page-id',
+      notionUrl: 'https://notion.so/mock-prd-page',
+      sections: [
+        'Executive Summary',
+        'Problem Statement', 
+        'Target Audience',
+        'Features & Requirements',
+        'Success Metrics',
+        'Technical Overview',
+        'Timeline & Milestones'
+      ],
+      wordCount: 2500
+    };
+
+    const processingTime = Date.now() - startTime;
 
     return NextResponse.json({
       success: true,
-      data: result,
-      sessionId: sessionId || `session-${Date.now()}`
+      data: mockResponse,
+      metadata: {
+        agentType: 'prd',
+        processingTime,
+        confidence: 0.94,
+        sessionId: sessionId || `session-${Date.now()}`,
+      },
     });
 
   } catch (error) {
-    console.error('PRD generation error:', error);
+    const processingTime = Date.now() - startTime;
+    console.error('PRD generation API error:', error);
+    
     return NextResponse.json(
-      { 
-        error: 'Failed to generate PRD',
-        details: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to generate PRD',
+        metadata: {
+          agentType: 'prd',
+          processingTime,
+          confidence: 0,
+        },
       },
       { status: 500 }
     );

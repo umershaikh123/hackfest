@@ -1,36 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { feedbackRouterAgent } from '@/src/mastra/agents/feedbackRouterAgent';
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
-    const { feedback, currentState, sessionId } = await request.json();
+    const body = await request.json();
+    const { message, context, sessionId } = body;
 
-    if (!feedback) {
+    if (!message) {
       return NextResponse.json(
-        { error: 'Feedback is required' },
+        { 
+          success: false,
+          error: 'Message is required',
+          metadata: {
+            agentType: 'feedback',
+            processingTime: 0,
+            confidence: 0,
+          }
+        },
         { status: 400 }
       );
     }
 
-    const result = await feedbackRouterAgent.generate(
-      `Please process this feedback: ${feedback} with current state: ${JSON.stringify(currentState || {})}`,
-      {
-        threadId: sessionId || `thread-${Date.now()}`
-      }
-    );
+    // Mock feedback routing response
+    const mockResponse = {
+      routedAgent: 'idea-generation' as const,
+      confidence: 0.85,
+      reasoning: 'Based on the feedback content, this should be routed to the idea generation agent for further refinement.',
+      suggestedAction: 'Refine the product concept based on user feedback',
+      requiresApproval: false
+    };
+
+    const processingTime = Date.now() - startTime;
 
     return NextResponse.json({
       success: true,
-      data: result,
-      sessionId: sessionId || `session-${Date.now()}`
+      data: mockResponse,
+      metadata: {
+        agentType: 'feedback',
+        processingTime,
+        confidence: 0.85,
+        sessionId: sessionId || `session-${Date.now()}`,
+      },
     });
 
   } catch (error) {
-    console.error('Feedback routing error:', error);
+    const processingTime = Date.now() - startTime;
+    console.error('Feedback routing API error:', error);
+    
     return NextResponse.json(
-      { 
-        error: 'Failed to process feedback',
-        details: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to process feedback',
+        metadata: {
+          agentType: 'feedback',
+          processingTime,
+          confidence: 0,
+        },
       },
       { status: 500 }
     );
