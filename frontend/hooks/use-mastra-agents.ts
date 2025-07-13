@@ -229,17 +229,26 @@ export function useMastraSprintPlanning() {
       teamVelocity = 20,
       sprintDuration = 2,
       conversationHistory = [],
+      productTitle = "Product Development",
+      features = [],
+      createLinearProject = true,
     }: {
       userStories: any[]
       teamVelocity?: number
       sprintDuration?: number
       conversationHistory?: any[]
+      productTitle?: string
+      features?: any[]
+      createLinearProject?: boolean
     }) => {
       return await mastraClient.agents.sprintPlanning(
         userStories,
         teamVelocity,
         sprintDuration,
-        conversationHistory
+        conversationHistory,
+        createLinearProject,
+        productTitle,
+        features
       )
     },
     onSuccess: () => {

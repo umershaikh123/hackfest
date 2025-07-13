@@ -162,9 +162,12 @@ export function createMastraRequest(
   conversationHistory: MastraMessage[] = [],
   options: Partial<MastraAgentRequest> = {}
 ): MastraAgentRequest {
+  // Limit conversation history to prevent payload size issues
+  const limitedHistory = conversationHistory.slice(-5) // Keep only last 5 messages
+  
   return {
     messages: [
-      ...conversationHistory,
+      ...limitedHistory,
       createMastraMessage(userMessage, "user")
     ],
     threadId: options.threadId || `thread-${Date.now()}`,
@@ -239,16 +242,26 @@ Please create:
     userStories: any[],
     conversationHistory: MastraMessage[] = []
   ): Promise<MastraAgentResponse> => {
+    // Limit data to prevent payload size issues
+    const limitedIdea = {
+      title: productIdea?.title || productIdea?.name || "Product Idea",
+      description: productIdea?.description || productIdea?.summary || "",
+      features: Array.isArray(productIdea?.features) ? productIdea.features.slice(0, 5) : []
+    }
+    
+    const limitedPersonas = Array.isArray(userPersonas) ? userPersonas.slice(0, 3) : []
+    const limitedStories = Array.isArray(userStories) ? userStories.slice(0, 5) : []
+
     const prompt = `Please create a comprehensive Product Requirements Document (PRD) based on this information:
 
 Product Idea:
-${JSON.stringify(productIdea, null, 2)}
+${JSON.stringify(limitedIdea, null, 2)}
 
 User Personas:
-${JSON.stringify(userPersonas, null, 2)}
+${JSON.stringify(limitedPersonas, null, 2)}
 
 User Stories:
-${JSON.stringify(userStories, null, 2)}
+${JSON.stringify(limitedStories, null, 2)}
 
 Please generate a professional PRD including:
 - Executive summary
@@ -274,26 +287,47 @@ Format the output for publication to Notion with proper structure and formatting
     userStories: any[],
     teamVelocity: number = 20,
     sprintDuration: number = 2,
-    conversationHistory: MastraMessage[] = []
+    conversationHistory: MastraMessage[] = [],
+    createLinearProject: boolean = true,
+    productTitle: string = "Product Development",
+    features: any[] = []
   ): Promise<MastraAgentResponse> => {
-    const prompt = `Please create a comprehensive sprint plan based on these user stories:
+    // Format user stories for the backend tool
+    const formattedStories = Array.isArray(userStories) 
+      ? userStories.slice(0, 5).map(story => ({
+          id: story.id || `US${Math.floor(Math.random() * 1000)}`,
+          title: story.title || story.name || 'User Story',
+          priority: story.priority || 'medium',
+          storyPoints: story.storyPoints || story.effort || 3,
+          persona: story.persona || 'User',
+          userAction: story.userAction || story.description || 'User wants to perform action',
+          benefit: story.benefit || 'To achieve desired outcome',
+          acceptanceCriteria: story.acceptanceCriteria || ['Story criteria defined']
+        }))
+      : []
+
+    // Format features for the backend tool
+    const formattedFeatures = Array.isArray(features)
+      ? features.slice(0, 3).map(feature => ({
+          name: feature.name || feature.title || 'Feature',
+          description: feature.description || 'Feature description',
+          priority: feature.priority || 'medium',
+          acceptanceCriteria: feature.acceptanceCriteria || ['Feature criteria defined']
+        }))
+      : []
+
+    // Create a prompt that instructs the agent to use the sprintPlannerTool
+    const prompt = `Create a sprint plan for "${productTitle}" with the following user stories and features:
 
 User Stories:
-${JSON.stringify(userStories, null, 2)}
+${formattedStories.map(story => `- ${story.title} (${story.storyPoints} points)`).join('\n')}
 
-Team Parameters:
-- Team velocity: ${teamVelocity} story points per sprint
-- Sprint duration: ${sprintDuration} weeks
-- Development team size: 5-7 members
+Features:
+${formattedFeatures.map(feature => `- ${feature.name}: ${feature.description}`).join('\n')}
 
-Please generate:
-- Logical sprint groupings based on dependencies and priority
-- Sprint goals and objectives for each sprint
-- Task breakdown for development, testing, and deployment
-- Resource allocation and capacity planning
-- Risk assessment and mitigation strategies
-- Integration with Linear project management
-- Sprint demo and retrospective planning`
+Team: ${5} developers, ${sprintDuration}-week sprints, Linear integration: ${createLinearProject}
+
+Please use the sprintPlannerTool to create the sprint plan.`
 
     const request = createMastraRequest(prompt, conversationHistory)
     return await callMastraAgent("sprintPlannerAgent", request)
@@ -308,13 +342,20 @@ Please generate:
     prdContent: any,
     conversationHistory: MastraMessage[] = []
   ): Promise<MastraAgentResponse> => {
+    // Limit PRD content to prevent payload size issues
+    const limitedContent = {
+      features: Array.isArray(prdContent?.features) ? prdContent.features.slice(0, 3) : [],
+      userStories: Array.isArray(prdContent?.userStories) ? prdContent.userStories.slice(0, 3) : [],
+      summary: prdContent?.summary || projectTitle
+    }
+
     const prompt = `Please create ${designType} visual design artifacts for this project:
 
 Project: ${projectTitle}
 Design Type: ${designType}
 
-PRD Content:
-${JSON.stringify(prdContent, null, 2)}
+PRD Summary:
+${JSON.stringify(limitedContent, null, 2)}
 
 Please generate:
 - Professional user journey maps with emotional states
@@ -435,11 +476,13 @@ export class MastraWorkflow {
 
       // Step 4: Generate sprint plan
       console.log('⚡ Step 4: Generating sprint plan...')
+      // Only pass essential data to avoid payload size limits
+      const limitedHistory = this.conversationHistory.slice(-2) // Only last 2 messages
       const sprintResult = await mastraAgents.sprintPlanning(
         userStoriesResult.data,
         20, // Default team velocity
         2,  // Default sprint duration
-        this.conversationHistory
+        limitedHistory
       )
       if (!sprintResult.success) throw new Error(`Sprint planning failed: ${sprintResult.error}`)
       
@@ -447,6 +490,8 @@ export class MastraWorkflow {
 
       // Step 5: Generate visual design
       console.log('🎨 Step 5: Generating visual design...')
+      // Limit conversation history and PRD content to avoid payload size issues
+      const limitedHistoryVisual = this.conversationHistory.slice(-2)
       const visualResult = await mastraAgents.visualDesign(
         ideaResult.data?.title || "Product Vision",
         "comprehensive_board",
@@ -455,7 +500,7 @@ export class MastraWorkflow {
           userPersonas: [], // Will be extracted from results
           userStories: userStoriesResult.data || []
         },
-        this.conversationHistory
+        limitedHistoryVisual
       )
       if (!visualResult.success) throw new Error(`Visual design failed: ${visualResult.error}`)
       

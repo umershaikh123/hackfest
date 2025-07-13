@@ -134,13 +134,50 @@ export default function TestMastraPage() {
   const testSprintPlanning = async () => {
     console.log("⚡ Testing Sprint Planning Agent...")
     try {
-      // Use real user stories from previous results
-      const userStories = userStoryGeneration.userStoriesData || []
+      // Use real user stories from previous results or create mock data
+      const userStories = userStoryGeneration.userStoriesData || [
+        {
+          id: "US001",
+          title: "User Registration",
+          priority: "critical",
+          storyPoints: 3,
+          persona: "New User",
+          userAction: "I want to create an account with email and password",
+          benefit: "So that I can start using the app",
+          acceptanceCriteria: ["Email validation works", "Password requirements met", "Account verification email sent"]
+        },
+        {
+          id: "US002", 
+          title: "User Login",
+          priority: "critical",
+          storyPoints: 2,
+          persona: "Registered User",
+          userAction: "I want to log in with my credentials",
+          benefit: "So that I can access my account",
+          acceptanceCriteria: ["Login form works", "Remember me option", "Password reset available"]
+        }
+      ]
+
+      // Get product idea for context
+      const productIdea = ideaGeneration.ideaData || {
+        title: "Test App",
+        description: testIdea
+      }
 
       const result = await sprintPlanning.generateSprintPlanAsync({
         userStories: userStories,
-        teamVelocity: 20, // Standard team velocity
-        sprintDuration: 2, // 2-week sprints
+        teamVelocity: 20,
+        sprintDuration: 2,
+        productTitle: productIdea.title || "Test App",
+        features: [
+          {
+            name: "User Authentication",
+            description: "Complete user registration and login system",
+            priority: "high",
+            acceptanceCriteria: ["Secure password handling", "Email verification", "Session management"]
+          }
+        ],
+        createLinearProject: true,
       })
       addTestResult("Sprint Planning Agent", true, result.data)
     } catch (error) {

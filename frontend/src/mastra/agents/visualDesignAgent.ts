@@ -3,6 +3,7 @@ import { Agent } from "@mastra/core"
 import { google } from "@ai-sdk/google"
 import { visualDesignTool } from "../tools/visualDesignTool.js"
 import { ragKnowledgeTool } from "../tools/ragKnowledgeTool.js"
+import { memory } from "./ideaGenerationAgent.js"
 import "dotenv/config"
 
 export const visualDesignAgent = new Agent({
@@ -77,6 +78,7 @@ export const visualDesignAgent = new Agent({
     Remember: Exceptional visuals don't just communicate—they inspire, persuade, and align teams around a shared vision. Your designs should be so compelling and professional that stakeholders immediately understand both the content and the strategic thinking behind it. Create visual artifacts that teams will be proud to use in presentations, planning sessions, and strategic discussions.
   `,
   model: google("gemini-2.0-flash"),
+  memory,
   tools: {
     visualDesignTool,
     ragKnowledgeTool,
@@ -112,12 +114,12 @@ export async function testVisualDesignAgent() {
 
   try {
     const response = await visualDesignAgent.generate(testMessage)
-    
+
     console.log("✅ Visual Design Agent test passed!")
     console.log("🎨 Agent Response:")
     console.log(response.text)
     console.log(`🔧 Tools Used: ${response.toolCalls?.length || 0}`)
-    
+
     return response
   } catch (error) {
     console.error("❌ Visual Design Agent test failed:", error)

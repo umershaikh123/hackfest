@@ -3,6 +3,7 @@ import { Agent } from "@mastra/core"
 import { sprintPlannerTool } from "../tools/sprintPlannerTool.js"
 import { ragKnowledgeTool } from "../tools/ragKnowledgeTool.js"
 import { google } from "@ai-sdk/google"
+import { memory } from "./ideaGenerationAgent.js"
 
 export const sprintPlannerAgent = new Agent({
   name: "The Sprint Architect",
@@ -47,6 +48,7 @@ export const sprintPlannerAgent = new Agent({
     Remember: Great sprint plans balance ambitious goals with realistic execution. Focus on sustainable velocity and continuous delivery.
   `,
   model: google("gemini-2.0-flash"),
+  memory,
   tools: {
     sprintPlannerTool,
     ragKnowledgeTool,
