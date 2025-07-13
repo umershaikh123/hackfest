@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npm run test:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(node:*)"
     ],
     "deny": []
   }

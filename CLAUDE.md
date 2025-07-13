@@ -21,8 +21,10 @@ Product Maestro is an AI-powered no-code IDE for product managers, built as a ha
 - `npm run test:rag` - Test RAG (Retrieval Augmented Generation) setup
 - `npm run test:prd` - Test PRD generation and Notion integration functionality
 - `npm run test:sprint` - Test sprint planning and Linear integration functionality
+- `npm run test:visual` - Test visual design and Miro integration functionality
 - `npx tsx src/test/testEndToEnd.ts` - End-to-end PRD generation pipeline test
 - `npx tsx src/test/testSprintPlanner.ts` - Comprehensive sprint planner testing
+- `npx tsx src/test/testVisualDesign.ts` - Comprehensive visual design testing
 - Individual component testing available via exported test functions in respective files
 
 ### Troubleshooting
@@ -47,6 +49,7 @@ This ensures the Mastra build system is properly initialized before starting the
   - `NOTION_PRD_DATABASE_ID` - Notion database ID where PRDs will be created
   - `LINEAR_API_KEY` - Linear API key for sprint planning integration (optional)
   - `LINEAR_TEAM_ID` - Linear team ID for creating cycles and issues (optional)
+  - `MIRO_API_KEY` - Miro API key for visual design and workflow diagrams (optional)
   - AI provider API keys (OpenAI, Google, Anthropic)
 
 ## Architecture Overview
@@ -69,6 +72,7 @@ The project is built on the Mastra framework for AI agent orchestration:
 - `userStoryGeneratorAgent.ts` - "The Story Weaver" for creating user stories
 - `prdAgent.ts` - "The PRD Compiler" for generating comprehensive Product Requirements Documents
 - `sprintPlannerAgent.ts` - "The Sprint Architect" for creating development sprint plans with Linear integration
+- `visualDesignAgent.ts` - "The Visual Strategist" for creating workflow diagrams and user flows with Miro integration
 - All agents use Google Gemini 2.0 Flash model and share memory storage
 
 #### Workflows (`src/mastra/workflows/`)
@@ -97,6 +101,7 @@ Comprehensive Zod schemas for:
 - `userStoryGeneratorTool.ts` - User story creation with priorities
 - `prdGeneratorTool.ts` - Comprehensive PRD content generation in Notion-compatible format
 - `sprintPlannerTool.ts` - Sprint planning with Linear integration for cycle and issue creation
+- `visualDesignTool.ts` - Visual workflow creation with Miro integration for diagrams and user flows
 - `notionTool.ts` - General-purpose Notion API integration for creating pages and appending blocks
 - `ragKnowledgeTool.ts` - Knowledge base search and retrieval
 - `vectorQueryTool.ts` - Pinecone vector operations
@@ -336,13 +341,16 @@ Product Maestro addresses a significant pain point for product-led organizations
    - End-to-end testing pipeline with Linear workspace integration
    - Team velocity calculation and smart task breakdown
 
-### 🚧 **Next Priorities**
-1. **Visual Design Agent (tool + workflow)**
-   - Shadcn/UI component generation
-   - Wireframe creation from PRD content
-   - Dynamic visual feedback system
+### ✅ **Recently Completed**
+5. ~~Visual Design Agent (tool + workflow)~~ **DONE** ✅
+   - Visual Design Tool with Miro API integration for workflow diagrams
+   - Visual Strategist Agent with UX design expertise and stakeholder communication
+   - Workflow step integration with user journey and process mapping
+   - Comprehensive testing pipeline with Miro workspace integration
+   - Support for user flows, process diagrams, persona mapping, and system architecture
 
-2. **Router/Feedback Analysis Agent (Internal)**
+### 🚧 **Next Priorities**
+1. **Router/Feedback Analysis Agent (Internal)**
    - User feedback processing and routing
    - Iterative refinement coordination
    - Multi-agent communication optimization
