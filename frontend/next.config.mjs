@@ -12,6 +12,14 @@ const nextConfig = {
   serverExternalPackages: ['@mastra/core', '@mastra/libsql', '@mastra/memory', '@mastra/pinecone', '@mastra/rag'],
   webpack: (config, { isServer }) => {
     if (isServer) {
+      // Ensure config.externals exists and is an array
+      if (!config.externals) {
+        config.externals = [];
+      }
+      if (!Array.isArray(config.externals)) {
+        config.externals = [config.externals];
+      }
+      
       config.externals.push({
         '@mastra/core': 'commonjs @mastra/core',
         '@mastra/libsql': 'commonjs @mastra/libsql',

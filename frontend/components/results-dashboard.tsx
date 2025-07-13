@@ -226,10 +226,18 @@ export function ResultsDashboard({
     },
   ]
 
-  const stats = conversation?.getConversationStats()
+  const stats = conversation?.getConversationStats?.() || {
+    totalMessages: 0,
+    userMessages: 0,
+    agentMessages: 0,
+    agentUsage: {},
+    averageProcessingTime: 0,
+    artifactCount: 0,
+    sessionDuration: 0,
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-h-[100vh]  overflow-auto">
       {/* Artifacts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {artifactItems.map(artifact => {

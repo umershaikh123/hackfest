@@ -167,21 +167,21 @@ export async function streamAgentResponse(
  * Agent-specific API calls with proper typing
  */
 export const agentAPI = {
-  ideaGeneration: (request: AgentRequest) =>
+  "idea-generation": (request: AgentRequest) =>
     callAgent<IdeaGenerationResponse>("idea-generation", request),
 
-  userStory: (request: AgentRequest) =>
+  "user-story": (request: AgentRequest) =>
     callAgent<UserStoryResponse>("user-story", request),
 
-  prd: (request: AgentRequest) => callAgent<PRDResponse>("prd", request),
+  "prd": (request: AgentRequest) => callAgent<PRDResponse>("prd", request),
 
-  sprintPlanner: (request: AgentRequest) =>
+  "sprint-planner": (request: AgentRequest) =>
     callAgent<SprintPlannerResponse>("sprint-planner", request),
 
-  visualDesign: (request: AgentRequest) =>
+  "visual-design": (request: AgentRequest) =>
     callAgent<VisualDesignResponse>("visual-design", request),
 
-  feedback: (request: AgentRequest) =>
+  "feedback": (request: AgentRequest) =>
     callAgent<FeedbackResponse>("feedback", request),
 }
 

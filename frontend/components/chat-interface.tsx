@@ -60,6 +60,13 @@ export function ChatInterface({
   const messages = conversation?.messages || []
   const loading = conversation?.isLoading || isLoading
 
+  // Debug logging
+  useEffect(() => {
+    console.log("ChatInterface - messages updated:", messages.length, messages)
+    console.log("ChatInterface - loading state:", loading)
+    console.log("ChatInterface - conversation object:", conversation)
+  }, [messages, loading, conversation])
+
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector(
@@ -177,7 +184,7 @@ export function ChatInterface({
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full  ">
       <ScrollArea ref={scrollAreaRef} className="flex-1 p-6">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
@@ -271,7 +278,7 @@ export function ChatInterface({
                       message.type === "user"
                         ? "chat-gradient text-primary-foreground"
                         : message.type === "system"
-                          ? "bg-blue-500/10 text-blue-600 border border-blue-500/20"
+                          ? "bg-muted text-muted-foreground border border-border"
                           : "bg-muted text-muted-foreground border border-border"
                     }`}
                   >
