@@ -37,34 +37,43 @@ export interface ConversationState {
 export function useConversation() {
   const { getCurrentSession, createSession, clearSession } = useSession()
 
-  const [state, setState] = useState<ConversationState>(() => ({
-    messages: [],
-    currentAgent: null,
-    isLoading: false,
-    sessionId: typeof window !== 'undefined' ? getCurrentSession() : `session_${Date.now()}`,
-    artifacts: {},
-  }))
-
-  // Load conversation from localStorage on mount
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const savedConversation = localStorage.getItem(
-      `conversation_${state.sessionId}`
-    )
-    if (savedConversation) {
+  const [state, setState] = useState<ConversationState>(() => {
+    // Clear any corrupted data on initialization
+    if (typeof window !== 'undefined') {
       try {
-        const parsed = JSON.parse(savedConversation)
-        setState(prev => ({
-          ...prev,
-          messages: parsed.messages || [],
-          artifacts: parsed.artifacts || {},
-        }))
+        const sessionId = getCurrentSession()
+        const saved = localStorage.getItem(`conversation_${sessionId}`)
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          // Validate and fix data
+          if (parsed.messages && Array.isArray(parsed.messages)) {
+            return {
+              messages: parsed.messages.map((msg: any) => ({
+                ...msg,
+                timestamp: new Date(msg.timestamp)
+              })),
+              currentAgent: null,
+              isLoading: false,
+              sessionId,
+              artifacts: parsed.artifacts || {}
+            }
+          }
+        }
       } catch (error) {
-        console.error("Failed to load conversation:", error)
+        console.error('Failed to load saved conversation:', error)
       }
     }
-  }, [state.sessionId])
+    
+    return {
+      messages: [],
+      currentAgent: null,
+      isLoading: false,
+      sessionId: typeof window !== 'undefined' ? getCurrentSession() : `session_${Date.now()}`,
+      artifacts: {},
+    }
+  })
+
+  // Note: We now load conversation in the initial state, so no need for this effect
 
   // Save conversation to localStorage whenever it changes
   useEffect(() => {
@@ -305,8 +314,10 @@ export function useConversation() {
       averageProcessingTime,
       artifactCount: Object.keys(state.artifacts).length,
       sessionDuration:
-        state.messages.length > 0
-          ? Date.now() - state.messages[0].timestamp.getTime()
+        state.messages.length > 0 && state.messages[0].timestamp
+          ? Date.now() - (state.messages[0].timestamp instanceof Date 
+              ? state.messages[0].timestamp.getTime() 
+              : new Date(state.messages[0].timestamp).getTime())
           : 0,
     }
   }, [state])

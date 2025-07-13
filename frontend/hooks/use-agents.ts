@@ -3,6 +3,7 @@
  * Provides optimized API state management with caching, error handling, and loading states
  */
 
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   AgentType, 
@@ -66,13 +67,29 @@ function useAgentMutation<T>(
 /**
  * Idea Generation Agent Hook
  */
-export function useIdeaGeneration() {
+export function useIdeaGeneration(onSuccess?: (data: IdeaGenerationResponse) => void) {
   const mutation = useAgentMutation<IdeaGenerationResponse>(
     'idea-generation',
     (data) => {
-      console.log('Idea generation completed:', data.data);
+      console.log('Idea generation onSuccess callback - full response:', data);
+      console.log('Idea generation onSuccess callback - data.data:', data.data);
+      // Call the provided callback if it exists
+      if (onSuccess && data.data) {
+        onSuccess(data.data);
+      }
     }
   );
+
+  // Log mutation state changes
+  useEffect(() => {
+    console.log('Idea generation mutation state changed:', {
+      isPending: mutation.isPending,
+      isSuccess: mutation.isSuccess,
+      isError: mutation.isError,
+      data: mutation.data,
+      error: mutation.error
+    });
+  }, [mutation.isPending, mutation.isSuccess, mutation.isError, mutation.data, mutation.error]);
 
   return {
     generateIdea: mutation.mutate,
@@ -210,6 +227,17 @@ export function useWorkflow() {
   const prdGenerator = usePRDGenerator();
   const sprintPlanner = useSprintPlanner();
   const visualDesign = useVisualDesign();
+  
+  // Debug log to check if hooks are working
+  useEffect(() => {
+    console.log('useWorkflow - hooks status:', {
+      ideaGeneration: {
+        isGenerating: ideaGeneration.isGenerating,
+        isSuccess: ideaGeneration.isSuccess,
+        hasData: !!ideaGeneration.ideaData
+      }
+    });
+  }, [ideaGeneration.isGenerating, ideaGeneration.isSuccess, ideaGeneration.ideaData]);
 
   const isAnyGenerating = 
     ideaGeneration.isGenerating ||

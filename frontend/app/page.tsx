@@ -22,6 +22,9 @@ import {
 function ProductMaestroApp() {
   const [showResults, setShowResults] = useState(false)
   const [currentStep, setCurrentStep] = useState<AgentType | null>(null)
+  const [processedResponses, setProcessedResponses] = useState<Set<string>>(
+    new Set()
+  )
 
   const workflow = useWorkflow()
   const conversation = useConversation()
@@ -36,41 +39,178 @@ function ProductMaestroApp() {
     }
   }, [workflow.allResults, showResults])
 
+  // Monitor agent responses and add them to conversation
+  useEffect(() => {
+    console.log("Idea generation effect check:", {
+      isSuccess: workflow.ideaGeneration.isSuccess,
+      hasData: !!workflow.ideaGeneration.ideaData,
+      alreadyProcessed: processedResponses.has("idea-generation"),
+      data: workflow.ideaGeneration.ideaData,
+    })
+
+    if (
+      workflow.ideaGeneration.isSuccess &&
+      workflow.ideaGeneration.ideaData &&
+      !processedResponses.has("idea-generation")
+    ) {
+      const response = workflow.ideaGeneration.ideaData
+      console.log("Adding idea generation response to conversation:", response)
+      const message = conversation.addAgentMessage(
+        `✨ I've refined your idea!\n\n**Refined Idea:** ${response.refinedIdea}\n\n**Key Features:**\n${response.features.map(f => `• ${f}`).join("\n")}\n\n**Target Audience:** ${response.targetAudience}\n\n**Problem Statement:** ${response.problemStatement}`,
+        "idea-generation"
+      )
+      console.log("Agent message added:", message)
+      conversation.setLoading(false)
+      setProcessedResponses(prev => new Set(prev).add("idea-generation"))
+    }
+  }, [
+    workflow.ideaGeneration.isSuccess,
+    workflow.ideaGeneration.ideaData,
+    processedResponses,
+    conversation.addAgentMessage,
+    conversation.setLoading,
+  ])
+
+  useEffect(() => {
+    if (
+      workflow.userStoryGenerator.isSuccess &&
+      workflow.userStoryGenerator.userStories &&
+      !processedResponses.has("user-story")
+    ) {
+      const response = workflow.userStoryGenerator.userStories
+      console.log("User stories completed:", response)
+      conversation.addAgentMessage(
+        `📝 I've generated user stories for your product!\n\n**User Stories:**\n${response.userStories.map(story => `• **${story.title}** (${story.priority} priority, ${story.storyPoints} points)\n  ${story.description}`).join("\n\n")}`,
+        "user-story"
+      )
+      conversation.setLoading(false)
+      setProcessedResponses(prev => new Set(prev).add("user-story"))
+    }
+  }, [
+    workflow.userStoryGenerator.isSuccess,
+    workflow.userStoryGenerator.userStories,
+    processedResponses,
+    conversation.addAgentMessage,
+    conversation.setLoading,
+  ])
+
+  useEffect(() => {
+    if (
+      workflow.prdGenerator.isSuccess &&
+      workflow.prdGenerator.prdData &&
+      !processedResponses.has("prd")
+    ) {
+      const response = workflow.prdGenerator.prdData
+      console.log("PRD completed:", response)
+      conversation.addAgentMessage(
+        `📋 I've created a comprehensive PRD for your product!\n\n**PRD ID:** ${response.prdId}\n**Word Count:** ${response.wordCount}\n**Sections:** ${response.sections.join(", ")}\n${response.notionUrl ? `\n**Notion URL:** ${response.notionUrl}` : ""}`,
+        "prd"
+      )
+      conversation.setLoading(false)
+      setProcessedResponses(prev => new Set(prev).add("prd"))
+    }
+  }, [
+    workflow.prdGenerator.isSuccess,
+    workflow.prdGenerator.prdData,
+    processedResponses,
+    conversation.addAgentMessage,
+    conversation.setLoading,
+  ])
+
+  useEffect(() => {
+    if (
+      workflow.sprintPlanner.isSuccess &&
+      workflow.sprintPlanner.sprintData &&
+      !processedResponses.has("sprint-planner")
+    ) {
+      const response = workflow.sprintPlanner.sprintData
+      console.log("Sprint plan completed:", response)
+      conversation.addAgentMessage(
+        `🎯 I've created a sprint plan for your product!\n\n**Sprints:**\n${response.sprints.map(sprint => `• **${sprint.name}** (${sprint.duration} weeks)\n  ${sprint.tasks.length} tasks planned`).join("\n\n")}\n${response.linearUrl ? `\n**Linear URL:** ${response.linearUrl}` : ""}`,
+        "sprint-planner"
+      )
+      conversation.setLoading(false)
+      setProcessedResponses(prev => new Set(prev).add("sprint-planner"))
+    }
+  }, [
+    workflow.sprintPlanner.isSuccess,
+    workflow.sprintPlanner.sprintData,
+    processedResponses,
+    conversation.addAgentMessage,
+    conversation.setLoading,
+  ])
+
+  useEffect(() => {
+    if (
+      workflow.visualDesign.isSuccess &&
+      workflow.visualDesign.visualData &&
+      !processedResponses.has("visual-design")
+    ) {
+      const response = workflow.visualDesign.visualData
+      console.log("Visual design completed:", response)
+      conversation.addAgentMessage(
+        `🎨 I've created visual designs for your product!\n\n**Board ID:** ${response.boardId}\n**Artifacts:** ${response.artifacts.map(a => `${a.type} (${a.elementCount} elements)`).join(", ")}\n\n**Miro Board:** ${response.boardUrl}`,
+        "visual-design"
+      )
+      conversation.setLoading(false)
+      setProcessedResponses(prev => new Set(prev).add("visual-design"))
+    }
+  }, [
+    workflow.visualDesign.isSuccess,
+    workflow.visualDesign.visualData,
+    processedResponses,
+    conversation.addAgentMessage,
+    conversation.setLoading,
+  ])
+
   const handleAgentCall = async (agentType: AgentType, message: string) => {
     setCurrentStep(agentType)
     conversation.setCurrentAgent(agentType)
     conversation.setLoading(true)
 
+    // Add user message first
+    conversation.addUserMessage(message)
+
     try {
       const context = conversation.getConversationContext()
+      console.log(`Calling ${agentType} agent with message:`, message)
 
-      switch (agentType) {
-        case "idea-generation":
-          workflow.ideaGeneration.generateIdea({ message, context })
-          break
-        case "user-story":
-          workflow.userStoryGenerator.generateUserStories({ message, context })
-          break
-        case "prd":
-          workflow.prdGenerator.generatePRD({ message, context })
-          break
-        case "sprint-planner":
-          workflow.sprintPlanner.generateSprintPlan({ message, context })
-          break
-        case "visual-design":
-          workflow.visualDesign.generateVisualDesign({ message, context })
-          break
-        case "feedback":
-          // Handle feedback routing
-          break
-      }
-
-      conversation.addUserMessage(message)
+      // Reset processed responses for this agent type to allow new responses
+      setProcessedResponses(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(agentType)
+        return newSet
+      })
     } catch (error) {
       console.error("Agent call failed:", error)
-    } finally {
-      conversation.setLoading(false)
-      setCurrentStep(null)
+      conversation.addSystemMessage(
+        `❌ Failed to call ${agentType} agent: ${error}`
+      )
+    }
+
+    // Actually call the agent (this was missing!)
+    const context = conversation.getConversationContext()
+
+    switch (agentType) {
+      case "idea-generation":
+        console.log("Calling generateIdea with:", { message, context })
+        workflow.ideaGeneration.generateIdea({ message, context })
+        break
+      case "user-story":
+        workflow.userStoryGenerator.generateUserStories({ message, context })
+        break
+      case "prd":
+        workflow.prdGenerator.generatePRD({ message, context })
+        break
+      case "sprint-planner":
+        workflow.sprintPlanner.generateSprintPlan({ message, context })
+        break
+      case "visual-design":
+        workflow.visualDesign.generateVisualDesign({ message, context })
+        break
+      case "feedback":
+        // Handle feedback routing
+        break
     }
   }
 
@@ -87,7 +227,7 @@ function ProductMaestroApp() {
       )
 
       // Update artifacts in conversation
-      if (results && typeof results === 'object') {
+      if (results && typeof results === "object") {
         Object.entries(results).forEach(([key, value]) => {
           conversation.updateArtifact(key as keyof typeof results, value)
         })
@@ -189,35 +329,14 @@ function ProductMaestroApp() {
         <div
           className={`grid gap-8 ${showResults ? "lg:grid-cols-2" : "lg:grid-cols-1"} transition-all duration-500`}
         >
-          {/* Chat Interface */}
-          <div className="space-y-6">
-            <Card className="h-[600px] flex flex-col">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2">
-                  💬 AI Assistant
-                  {workflow.isAnyGenerating && (
-                    <Badge variant="secondary" className="ml-auto">
-                      {currentStep
-                        ? `${currentStep} processing...`
-                        : "Processing..."}
-                    </Badge>
-                  )}
-                </CardTitle>
-                <CardDescription>
-                  Chat with our AI agents to transform your ideas into product
-                  plans
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col">
-                <ChatInterface
-                  onAgentCall={handleAgentCall}
-                  onWorkflowRun={handleRunCompleteWorkflow}
-                  conversation={conversation}
-                  isLoading={workflow.isAnyGenerating}
-                  currentAgent={conversation.currentAgent}
-                />
-              </CardContent>
-            </Card>
+          <div className="glassmorphism rounded-xl border border-border/50 h-[600px] flex flex-col">
+            <ChatInterface
+              onAgentCall={handleAgentCall}
+              onWorkflowRun={handleRunCompleteWorkflow}
+              conversation={conversation}
+              isLoading={workflow.isAnyGenerating}
+              currentAgent={conversation.currentAgent}
+            />
           </div>
 
           {/* Results Dashboard */}
