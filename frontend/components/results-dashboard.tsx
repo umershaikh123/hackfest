@@ -2,141 +2,324 @@
 
 import type React from "react"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Lightbulb, FileText, Users, Calendar, Palette, CheckCircle, Clock, AlertTriangle } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Lightbulb,
+  FileText,
+  Users,
+  Calendar,
+  Palette,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  ExternalLink,
+  Download,
+  Eye,
+} from "lucide-react"
 
-interface Artifact {
-  id: string
-  title: string
-  description: string
-  status: "completed" | "in-progress" | "optional"
-  icon: React.ReactNode
-  actionButton?: {
-    label: string
-    onClick: () => void
+interface ResultsDashboardProps {
+  artifacts: {
+    idea?: any
+    userStories?: any
+    prd?: any
+    sprints?: any
+    visual?: any
+  }
+  conversation?: {
+    messages: any[]
+    getConversationStats: () => any
+    exportConversation: () => void
   }
 }
 
-const artifacts: Artifact[] = [
-  {
-    id: "1",
-    title: "Product Idea",
-    description: "Refined and structured concept",
-    status: "completed",
-    icon: <Lightbulb className="w-5 h-5" />,
-  },
-  {
-    id: "2",
-    title: "User Stories",
-    description: "Comprehensive stories with acceptance criteria",
-    status: "completed",
-    icon: <Users className="w-5 h-5" />,
-  },
-  {
-    id: "3",
-    title: "PRD",
-    description: "Product Requirements Document",
-    status: "completed",
-    icon: <FileText className="w-5 h-5" />,
-  },
-  {
-    id: "4",
-    title: "Sprint Plans",
-    description: "Development timeline (optional)",
-    status: "optional",
-    icon: <Calendar className="w-5 h-5" />,
-  },
-  {
-    id: "5",
-    title: "Visual Design",
-    description: "User journey maps (optional)",
-    status: "optional",
-    icon: <Palette className="w-5 h-5" />,
-    actionButton: {
-      label: "View Miro Board",
-      onClick: () => console.log("Opening Miro board..."),
+export function ResultsDashboard({
+  artifacts,
+  conversation,
+}: ResultsDashboardProps) {
+  const getArtifactStatus = (artifactData: any) => {
+    return artifactData ? "completed" : "pending"
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "completed":
+        return <CheckCircle className="w-4 h-4 text-green-500" />
+      case "pending":
+        return <Clock className="w-4 h-4 text-muted-foreground" />
+      default:
+        return <AlertTriangle className="w-4 h-4 text-red-500" />
+    }
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "completed":
+        return (
+          <Badge
+            variant="default"
+            className="bg-green-500/20 text-green-400 border-green-500/30"
+          >
+            ✅ Completed
+          </Badge>
+        )
+      case "pending":
+        return <Badge variant="secondary">⏳ Pending</Badge>
+      default:
+        return <Badge variant="destructive">⚠️ Error</Badge>
+    }
+  }
+
+  const openExternalLink = (url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer")
+  }
+
+  const renderArtifactDetail = (type: string, data: any) => {
+    if (!data) return null
+
+    switch (type) {
+      case "idea":
+        return (
+          <div className="space-y-2">
+            <h4 className="font-medium">{data.refinedIdea}</h4>
+            <p className="text-sm text-muted-foreground">
+              {data.problemStatement}
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {data.features
+                ?.slice(0, 3)
+                .map((feature: string, idx: number) => (
+                  <Badge key={idx} variant="outline" className="text-xs">
+                    {feature}
+                  </Badge>
+                ))}
+            </div>
+          </div>
+        )
+
+      case "userStories":
+        return (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              {data.userStories?.length || 0} stories generated
+            </p>
+            {data.userStories?.slice(0, 2).map((story: any, idx: number) => (
+              <div key={idx} className="text-xs space-y-1">
+                <p className="font-medium">{story.title}</p>
+                <p className="text-muted-foreground">
+                  {story.description.slice(0, 100)}...
+                </p>
+              </div>
+            ))}
+          </div>
+        )
+
+      case "prd":
+        return (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              {data.wordCount || 0} words, {data.sections?.length || 0} sections
+            </p>
+            {data.notionUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openExternalLink(data.notionUrl)}
+                className="w-full"
+              >
+                <ExternalLink className="w-3 h-3 mr-1" />
+                View in Notion
+              </Button>
+            )}
+          </div>
+        )
+
+      case "sprints":
+        return (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              {data.sprints?.length || 0} sprints planned
+            </p>
+            {data.linearUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openExternalLink(data.linearUrl)}
+                className="w-full"
+              >
+                <ExternalLink className="w-3 h-3 mr-1" />
+                View in Linear
+              </Button>
+            )}
+          </div>
+        )
+
+      case "visual":
+        return (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              {data.artifacts?.length || 0} design artifacts
+            </p>
+            {data.boardUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openExternalLink(data.boardUrl)}
+                className="w-full"
+              >
+                <ExternalLink className="w-3 h-3 mr-1" />
+                View Miro Board
+              </Button>
+            )}
+          </div>
+        )
+
+      default:
+        return null
+    }
+  }
+
+  const artifactItems = [
+    {
+      key: "idea",
+      title: "Product Idea",
+      description: "Refined and structured concept",
+      icon: <Lightbulb className="w-5 h-5" />,
+      data: artifacts.idea,
     },
-  },
-]
+    {
+      key: "userStories",
+      title: "User Stories",
+      description: "Comprehensive stories with acceptance criteria",
+      icon: <Users className="w-5 h-5" />,
+      data: artifacts.userStories,
+    },
+    {
+      key: "prd",
+      title: "PRD",
+      description: "Product Requirements Document",
+      icon: <FileText className="w-5 h-5" />,
+      data: artifacts.prd,
+    },
+    {
+      key: "sprints",
+      title: "Sprint Plans",
+      description: "Development timeline and task breakdown",
+      icon: <Calendar className="w-5 h-5" />,
+      data: artifacts.sprints,
+    },
+    {
+      key: "visual",
+      title: "Visual Design",
+      description: "User journey maps and workflow diagrams",
+      icon: <Palette className="w-5 h-5" />,
+      data: artifacts.visual,
+    },
+  ]
 
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case "completed":
-      return <CheckCircle className="w-4 h-4 text-green-500" />
-    case "in-progress":
-      return <Clock className="w-4 h-4 text-yellow-500" />
-    case "optional":
-      return <Clock className="w-4 h-4 text-blue-500" />
-    default:
-      return <AlertTriangle className="w-4 h-4 text-red-500" />
-  }
-}
+  const stats = conversation?.getConversationStats()
 
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case "completed":
-      return (
-        <Badge variant="default" className="bg-green-500/20 text-green-400 border-green-500/30">
-          ✅ Completed
-        </Badge>
-      )
-    case "in-progress":
-      return (
-        <Badge variant="default" className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
-          🔄 In Progress
-        </Badge>
-      )
-    case "optional":
-      return (
-        <Badge variant="default" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-          🔄 Optional
-        </Badge>
-      )
-    default:
-      return <Badge variant="destructive">⚠️ Error</Badge>
-  }
-}
-
-export function ResultsDashboard() {
   return (
-    <div className="p-6 space-y-6">
-      <div className="space-y-2">
-        <h2 className="text-2xl font-bold">Generated Artifacts</h2>
-        <p className="text-muted-foreground">Your AI-generated product development assets</p>
+    <div className="space-y-6">
+      {/* Artifacts Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {artifactItems.map(artifact => {
+          const status = getArtifactStatus(artifact.data)
+          return (
+            <Card
+              key={artifact.key}
+              className="hover:bg-card/80 transition-all duration-200"
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2 text-primary">
+                    {artifact.icon}
+                    <CardTitle className="text-base">
+                      {artifact.title}
+                    </CardTitle>
+                  </div>
+                  {getStatusIcon(status)}
+                </div>
+                <CardDescription className="text-sm">
+                  {artifact.description}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {getStatusBadge(status)}
+                {renderArtifactDetail(artifact.key, artifact.data)}
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {artifacts.map((artifact) => (
-          <Card key={artifact.id} className="glassmorphism hover:bg-card/80 transition-all duration-200 group">
-            <CardHeader className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 text-primary">
-                  {artifact.icon}
-                  <CardTitle className="text-lg">{artifact.title}</CardTitle>
-                </div>
-                {getStatusIcon(artifact.status)}
-              </div>
-              <CardDescription className="text-sm">{artifact.description}</CardDescription>
+      {/* Conversation Stats */}
+      {stats && (
+        <>
+          <Separator />
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Session Statistics</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {getStatusBadge(artifact.status)}
-
-              {artifact.actionButton && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={artifact.actionButton.onClick}
-                  className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors bg-transparent"
-                >
-                  {artifact.actionButton.label}
-                </Button>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold">
+                    {stats.totalMessages}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Total Messages
+                  </div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">
+                    {stats.artifactCount}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Artifacts</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">
+                    {Math.round(stats.averageProcessingTime / 1000)}s
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Avg Response
+                  </div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">
+                    {Math.round((stats.sessionDuration || 0) / 60000)}m
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Session Time
+                  </div>
+                </div>
+              </div>
+              {conversation?.exportConversation && (
+                <div className="mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={conversation.exportConversation}
+                    className="w-full"
+                  >
+                    <Download className="w-3 h-3 mr-1" />
+                    Export Conversation
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
-        ))}
-      </div>
+        </>
+      )}
     </div>
   )
 }
