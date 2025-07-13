@@ -1,0 +1,170 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Indigo Classic (Default) */
+  --background: 224 71% 4%;
+  --foreground: 210 20% 98%;
+  --card: 224 71% 4%;
+  --card-foreground: 210 20% 98%;
+  --popover: 224 71% 4%;
+  --popover-foreground: 210 20% 98%;
+  --primary: 231 81% 90%;
+  --primary-foreground: 224 71% 4%;
+  --secondary: 215 27% 17%;
+  --secondary-foreground: 210 20% 98%;
+  --muted: 215 27% 17%;
+  --muted-foreground: 217 10% 64%;
+  --accent: 216 34% 17%;
+  --accent-foreground: 210 20% 98%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 215 27% 17%;
+  --input: 215 27% 17%;
+  --ring: 231 81% 90%;
+  --radius: 0.5rem;
+}
+
+[data-theme="ocean"] {
+  --background: 222 84% 5%;
+  --foreground: 210 40% 98%;
+  --card: 222 84% 5%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 84% 5%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 199 89% 48%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 217 32% 17%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217 32% 17%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 216 34% 17%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217 32% 17%;
+  --input: 217 32% 17%;
+  --ring: 199 89% 48%;
+}
+
+[data-theme="sunset"] {
+  --background: 20 14% 4%;
+  --foreground: 60 9% 98%;
+  --card: 20 14% 4%;
+  --card-foreground: 60 9% 98%;
+  --popover: 20 14% 4%;
+  --popover-foreground: 60 9% 98%;
+  --primary: 24 70% 56%;
+  --primary-foreground: 60 9% 98%;
+  --secondary: 12 6% 15%;
+  --secondary-foreground: 60 9% 98%;
+  --muted: 12 6% 15%;
+  --muted-foreground: 24 5% 64%;
+  --accent: 12 6% 15%;
+  --accent-foreground: 60 9% 98%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 60 9% 98%;
+  --border: 12 6% 15%;
+  --input: 12 6% 15%;
+  --ring: 24 70% 56%;
+}
+
+[data-theme="forest"] {
+  --background: 120 50% 4%;
+  --foreground: 60 9% 98%;
+  --card: 120 50% 4%;
+  --card-foreground: 60 9% 98%;
+  --popover: 120 50% 4%;
+  --popover-foreground: 60 9% 98%;
+  --primary: 142 76% 36%;
+  --primary-foreground: 60 9% 98%;
+  --secondary: 120 10% 15%;
+  --secondary-foreground: 60 9% 98%;
+  --muted: 120 10% 15%;
+  --muted-foreground: 120 5% 64%;
+  --accent: 120 10% 15%;
+  --accent-foreground: 60 9% 98%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 60 9% 98%;
+  --border: 120 10% 15%;
+  --input: 120 10% 15%;
+  --ring: 142 76% 36%;
+}
+
+[data-theme="purple"] {
+  --background: 263 70% 4%;
+  --foreground: 210 20% 98%;
+  --card: 263 70% 4%;
+  --card-foreground: 210 20% 98%;
+  --popover: 263 70% 4%;
+  --popover-foreground: 210 20% 98%;
+  --primary: 263 85% 70%;
+  --primary-foreground: 263 70% 4%;
+  --secondary: 263 20% 17%;
+  --secondary-foreground: 210 20% 98%;
+  --muted: 263 20% 17%;
+  --muted-foreground: 263 10% 64%;
+  --accent: 263 20% 17%;
+  --accent-foreground: 210 20% 98%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 263 20% 17%;
+  --input: 263 20% 17%;
+  --ring: 263 85% 70%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-gradient {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+}
+
+.ai-message {
+  background: linear-gradient(135deg, hsl(var(--muted)), hsl(var(--accent)));
+}
+
+@keyframes typing {
+  0%,
+  20% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.typing-indicator span {
+  animation: typing 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}

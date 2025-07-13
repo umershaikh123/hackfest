@@ -1,0 +1,58 @@
+{
+  "name": "product-maestro",
+  "version": "1.0.0",
+  "main": "index.js",
+  "description": "AI-powered no-code IDE for product managers",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "mastra dev",
+    "build": "mastra build",
+    "start": "mastra start",
+    "test:idea": "tsx src/test/testIdeaGeneration.ts",
+    "test:rag": "tsx src/test/testRAGSetup.ts",
+    "test:prd": "tsx src/test/testPRDGeneration.ts",
+    "test:sprint": "tsx src/test/testSprintPlanner.ts",
+    "test:visual": "tsx src/test/testVisualDesign.ts",
+    "test:conversational": "tsx src/test/testConversationalWorkflow.ts",
+    "test:feedback": "tsx src/test/testFeedbackRouter.ts",
+    "test:index": "tsx src/test/testMastraIndex.ts",
+    "miro:setup": "tsx src/scripts/miroSimpleAuth.ts",
+    "miro:auto": "tsx src/scripts/miroRedirectHandler.ts",
+    "miro:token": "tsx src/scripts/miroSimpleAuth.ts",
+    "miro:test": "tsx src/scripts/testMiroAPI.ts",
+    "visual:demo": "tsx src/scripts/testVisualDesignEndToEnd.ts",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .mastra node_modules",
+    "lint": "echo 'No linter configured yet'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.2.12",
+    "@ai-sdk/google": "^1.2.22",
+    "@ai-sdk/openai": "latest",
+    "@anthropic-ai/claude-code": "^1.0.51",
+    "@mastra/core": "^0.10.12",
+    "@mastra/libsql": "^0.11.0",
+    "@mastra/loggers": "^0.10.3",
+    "@mastra/mcp": "^0.10.6",
+    "@mastra/memory": "^0.11.2",
+    "@mastra/pinecone": "latest",
+    "@mastra/rag": "latest",
+    "@notionhq/client": "^4.0.1",
+    "ai": "^4.3.17",
+    "dotenv": "^16.0.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "mastra": "^0.10.12",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
