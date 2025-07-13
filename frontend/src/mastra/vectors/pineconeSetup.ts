@@ -4,7 +4,7 @@ import "dotenv/config"
 // Initialize Pinecone store with error handling
 export const pineconeStore = new PineconeVector({
   apiKey: process.env.PINECONE_API_KEY!,
-  host: process.env.PINECONE_HOST!,
+  environment: process.env.PINECONE_ENVIRONMENT!,
 })
 
 // Initialize index if it doesn't exist

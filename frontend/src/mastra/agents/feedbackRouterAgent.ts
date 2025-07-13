@@ -7,7 +7,7 @@ import { ragKnowledgeTool } from "../tools/ragKnowledgeTool.js"
 
 /**
  * The Router/Feedback Analysis Agent - "The Workflow Navigator"
- * 
+ *
  * An expert workflow orchestrator and feedback analyst that intelligently routes
  * user feedback to the appropriate specialized agents for iterative refinement.
  * This agent acts as the central nervous system of the conversational IDE.
@@ -81,7 +81,7 @@ export const feedbackRouterAgent = new Agent({
     - Maintain consistency across all product artifacts
     - Ensure proper context transfer between agents
 
-    ## Key Instructions:
+    ## Key Instructions:repo
     1. Always use the feedback router tool to analyze and route user feedback
     2. When in doubt, ask clarifying questions before routing
     3. Suspend workflow for user confirmation when making significant changes
@@ -102,23 +102,25 @@ export const feedbackRouterAgent = new Agent({
 // Export test function for development
 export async function testFeedbackRouterAgent() {
   console.log("🧭 Testing Feedback Router Agent...")
-  
+
   const testFeedback = {
     type: "idea_refinement" as const,
-    content: "I think we need to add social sharing features and maybe integrate with existing social platforms",
+    content:
+      "I think we need to add social sharing features and maybe integrate with existing social platforms",
     priority: "high" as const,
     timestamp: new Date().toISOString(),
   }
-  
+
   const testWorkflowState = {
     currentStep: "user_story_generation",
     completedSteps: ["idea_generation"],
     productIdeaStatus: "refined" as const,
     userStoriesStatus: "pending" as const,
   }
-  
+
   try {
-    const result = await feedbackRouterAgent.generate(`
+    const result = await feedbackRouterAgent.generate(
+      `
       Please analyze this user feedback and determine the appropriate routing:
       
       Feedback: "${testFeedback.content}"
@@ -128,13 +130,15 @@ export async function testFeedbackRouterAgent() {
       Current workflow state: ${JSON.stringify(testWorkflowState, null, 2)}
       
       Please use the feedback router tool to provide a routing decision.
-    `, {
-      conversationId: "feedback-router-test"
-    })
-    
+    `,
+      {
+        maxSteps: 5,
+      }
+    )
+
     console.log("✅ Feedback Router Agent test completed")
     console.log("📊 Result:", result)
-    
+
     return result
   } catch (error) {
     console.error("❌ Feedback Router Agent test failed:", error)

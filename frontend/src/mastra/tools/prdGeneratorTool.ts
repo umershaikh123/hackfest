@@ -10,7 +10,7 @@ import {
   UserPersonaSchema,
   UserStorySchema,
   PRDSchema,
-} from "../../types.ts/productMaestro"
+} from "../../types/productMaestro"
 import { createNotionBlocks } from "./notionTool"
 
 // Input schema for PRD generation
@@ -275,9 +275,7 @@ export const prdGeneratorTool = createTool({
     } catch (error) {
       console.error("❌ PRD Generation Error:", error)
       throw new Error(
-        `Failed to generate PRD: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
+        `Failed to generate PRD: ${error instanceof Error ? error.message : "Unknown error"}`
       )
     }
   },

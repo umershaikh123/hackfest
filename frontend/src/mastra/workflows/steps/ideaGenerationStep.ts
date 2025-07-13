@@ -4,7 +4,7 @@ import { ideaGenerationAgent } from "../../agents/ideaGenerationAgent"
 import {
   ProductIdeaSchema,
   UserPersonaSchema,
-} from "../../../types.ts/productMaestro"
+} from "../../../types/productMaestro"
 
 export const ideaGenerationStep = createStep({
   id: "idea-generation-step",

@@ -4,8 +4,7 @@ import { useState, useEffect } from "react"
 import { ChatInterface } from "@/components/chat-interface"
 import { ResultsDashboard } from "@/components/results-dashboard"
 import { ThemeSwitcher } from "@/components/theme-switcher"
-import { QueryProvider } from "@/components/providers/query-provider"
-import { useWorkflow } from "@/hooks/use-agents"
+import { useMastraAgents } from "@/hooks/use-mastra-agents"
 import { useConversation } from "@/hooks/use-conversation"
 import { AgentType } from "@/lib/agents"
 import { Button } from "@/components/ui/button"
@@ -26,37 +25,48 @@ function ProductMaestroApp() {
     new Set()
   )
 
-  const workflow = useWorkflow()
+  const mastraAgents = useMastraAgents()
   const conversation = useConversation()
 
   // Show results panel when we have any artifacts
   useEffect(() => {
-    const hasArtifacts = Object.values(workflow.allResults).some(
-      result => result !== undefined
-    )
+    const hasArtifacts = mastraAgents.ideaGeneration.ideaData ||
+      mastraAgents.userStoryGeneration.userStoriesData ||
+      mastraAgents.prdGeneration.prdData ||
+      mastraAgents.sprintPlanning.sprintData ||
+      mastraAgents.visualDesign.visualData
     if (hasArtifacts && !showResults) {
       setShowResults(true)
     }
-  }, [workflow.allResults, showResults])
+  }, [
+    mastraAgents.ideaGeneration.ideaData,
+    mastraAgents.userStoryGeneration.userStoriesData,
+    mastraAgents.prdGeneration.prdData,
+    mastraAgents.sprintPlanning.sprintData,
+    mastraAgents.visualDesign.visualData,
+    showResults
+  ])
 
   // Monitor agent responses and add them to conversation
   useEffect(() => {
     console.log("Idea generation effect check:", {
-      isSuccess: workflow.ideaGeneration.isSuccess,
-      hasData: !!workflow.ideaGeneration.ideaData,
+      isSuccess: mastraAgents.ideaGeneration.isSuccess,
+      hasData: !!mastraAgents.ideaGeneration.ideaData,
       alreadyProcessed: processedResponses.has("idea-generation"),
-      data: workflow.ideaGeneration.ideaData,
+      data: mastraAgents.ideaGeneration.ideaData,
     })
 
     if (
-      workflow.ideaGeneration.isSuccess &&
-      workflow.ideaGeneration.ideaData &&
+      mastraAgents.ideaGeneration.isSuccess &&
+      mastraAgents.ideaGeneration.ideaData &&
       !processedResponses.has("idea-generation")
     ) {
-      const response = workflow.ideaGeneration.ideaData
+      const response = mastraAgents.ideaGeneration.ideaData
       console.log("Adding idea generation response to conversation:", response)
       const message = conversation.addAgentMessage(
-        `✨ I've refined your idea!\n\n**Refined Idea:** ${response.refinedIdea}\n\n**Key Features:**\n${response.features.map(f => `• ${f}`).join("\n")}\n\n**Target Audience:** ${response.targetAudience}\n\n**Problem Statement:** ${response.problemStatement}`,
+        response.text ||
+          response.refinedIdea ||
+          "I've processed your idea! Here's my analysis:",
         "idea-generation"
       )
       console.log("Agent message added:", message)
@@ -64,8 +74,8 @@ function ProductMaestroApp() {
       setProcessedResponses(prev => new Set(prev).add("idea-generation"))
     }
   }, [
-    workflow.ideaGeneration.isSuccess,
-    workflow.ideaGeneration.ideaData,
+    mastraAgents.ideaGeneration.isSuccess,
+    mastraAgents.ideaGeneration.ideaData,
     processedResponses,
     conversation.addAgentMessage,
     conversation.setLoading,
@@ -73,22 +83,22 @@ function ProductMaestroApp() {
 
   useEffect(() => {
     if (
-      workflow.userStoryGenerator.isSuccess &&
-      workflow.userStoryGenerator.userStories &&
+      mastraAgents.userStoryGeneration.isSuccess &&
+      mastraAgents.userStoryGeneration.userStoriesData &&
       !processedResponses.has("user-story")
     ) {
-      const response = workflow.userStoryGenerator.userStories
+      const response = mastraAgents.userStoryGeneration.userStoriesData
       console.log("User stories completed:", response)
       conversation.addAgentMessage(
-        `📝 I've generated user stories for your product!\n\n**User Stories:**\n${response.userStories.map(story => `• **${story.title}** (${story.priority} priority, ${story.storyPoints} points)\n  ${story.description}`).join("\n\n")}`,
+        response.text || "I've generated user stories for your product!",
         "user-story"
       )
       conversation.setLoading(false)
       setProcessedResponses(prev => new Set(prev).add("user-story"))
     }
   }, [
-    workflow.userStoryGenerator.isSuccess,
-    workflow.userStoryGenerator.userStories,
+    mastraAgents.userStoryGeneration.isSuccess,
+    mastraAgents.userStoryGeneration.userStoriesData,
     processedResponses,
     conversation.addAgentMessage,
     conversation.setLoading,
@@ -96,22 +106,24 @@ function ProductMaestroApp() {
 
   useEffect(() => {
     if (
-      workflow.prdGenerator.isSuccess &&
-      workflow.prdGenerator.prdData &&
+      mastraAgents.prdGeneration.isSuccess &&
+      mastraAgents.prdGeneration.prdData &&
       !processedResponses.has("prd")
     ) {
-      const response = workflow.prdGenerator.prdData
+      const response = mastraAgents.prdGeneration.prdData
       console.log("PRD completed:", response)
       conversation.addAgentMessage(
-        `📋 I've created a comprehensive PRD for your product!\n\n**PRD ID:** ${response.prdId}\n**Word Count:** ${response.wordCount}\n**Sections:** ${response.sections.join(", ")}\n${response.notionUrl ? `\n**Notion URL:** ${response.notionUrl}` : ""}`,
+        response.text ||
+          response.content ||
+          "I've created a comprehensive PRD for your product!",
         "prd"
       )
       conversation.setLoading(false)
       setProcessedResponses(prev => new Set(prev).add("prd"))
     }
   }, [
-    workflow.prdGenerator.isSuccess,
-    workflow.prdGenerator.prdData,
+    mastraAgents.prdGeneration.isSuccess,
+    mastraAgents.prdGeneration.prdData,
     processedResponses,
     conversation.addAgentMessage,
     conversation.setLoading,
@@ -119,22 +131,24 @@ function ProductMaestroApp() {
 
   useEffect(() => {
     if (
-      workflow.sprintPlanner.isSuccess &&
-      workflow.sprintPlanner.sprintData &&
+      mastraAgents.sprintPlanning.isSuccess &&
+      mastraAgents.sprintPlanning.sprintData &&
       !processedResponses.has("sprint-planner")
     ) {
-      const response = workflow.sprintPlanner.sprintData
+      const response = mastraAgents.sprintPlanning.sprintData
       console.log("Sprint plan completed:", response)
       conversation.addAgentMessage(
-        `🎯 I've created a sprint plan for your product!\n\n**Sprints:**\n${response.sprints.map(sprint => `• **${sprint.name}** (${sprint.duration} weeks)\n  ${sprint.tasks.length} tasks planned`).join("\n\n")}\n${response.linearUrl ? `\n**Linear URL:** ${response.linearUrl}` : ""}`,
+        response.text ||
+          response.content ||
+          "I've created a sprint plan for your product!",
         "sprint-planner"
       )
       conversation.setLoading(false)
       setProcessedResponses(prev => new Set(prev).add("sprint-planner"))
     }
   }, [
-    workflow.sprintPlanner.isSuccess,
-    workflow.sprintPlanner.sprintData,
+    mastraAgents.sprintPlanning.isSuccess,
+    mastraAgents.sprintPlanning.sprintData,
     processedResponses,
     conversation.addAgentMessage,
     conversation.setLoading,
@@ -142,22 +156,24 @@ function ProductMaestroApp() {
 
   useEffect(() => {
     if (
-      workflow.visualDesign.isSuccess &&
-      workflow.visualDesign.visualData &&
+      mastraAgents.visualDesign.isSuccess &&
+      mastraAgents.visualDesign.visualData &&
       !processedResponses.has("visual-design")
     ) {
-      const response = workflow.visualDesign.visualData
+      const response = mastraAgents.visualDesign.visualData
       console.log("Visual design completed:", response)
       conversation.addAgentMessage(
-        `🎨 I've created visual designs for your product!\n\n**Board ID:** ${response.boardId}\n**Artifacts:** ${response.artifacts.map(a => `${a.type} (${a.elementCount} elements)`).join(", ")}\n\n**Miro Board:** ${response.boardUrl}`,
+        response.text ||
+          response.content ||
+          "I've created visual designs for your product!",
         "visual-design"
       )
       conversation.setLoading(false)
       setProcessedResponses(prev => new Set(prev).add("visual-design"))
     }
   }, [
-    workflow.visualDesign.isSuccess,
-    workflow.visualDesign.visualData,
+    mastraAgents.visualDesign.isSuccess,
+    mastraAgents.visualDesign.visualData,
     processedResponses,
     conversation.addAgentMessage,
     conversation.setLoading,
@@ -194,22 +210,52 @@ function ProductMaestroApp() {
     switch (agentType) {
       case "idea-generation":
         console.log("Calling generateIdea with:", { message, context })
-        workflow.ideaGeneration.generateIdea({ message, context })
+        mastraAgents.ideaGeneration.generateIdea({ 
+          idea: message, 
+          context: JSON.stringify(context)
+        })
         break
       case "user-story":
-        workflow.userStoryGenerator.generateUserStories({ message, context })
+        mastraAgents.userStoryGeneration.generateUserStories({
+          productIdea: mastraAgents.ideaGeneration.ideaData || { title: "Product", description: message },
+          userPersonas: []
+        })
         break
       case "prd":
-        workflow.prdGenerator.generatePRD({ message, context })
+        mastraAgents.prdGeneration.generatePRD({
+          productIdea: mastraAgents.ideaGeneration.ideaData || { title: "Product", description: message },
+          userPersonas: [],
+          userStories: mastraAgents.userStoryGeneration.userStoriesData || []
+        })
         break
       case "sprint-planner":
-        workflow.sprintPlanner.generateSprintPlan({ message, context })
+        mastraAgents.sprintPlanning.generateSprintPlan({
+          userStories: mastraAgents.userStoryGeneration.userStoriesData || [],
+          teamVelocity: 20,
+          sprintDuration: 2
+        })
         break
       case "visual-design":
-        workflow.visualDesign.generateVisualDesign({ message, context })
+        mastraAgents.visualDesign.generateVisualDesign({
+          projectTitle: mastraAgents.ideaGeneration.ideaData?.title || "Product Vision",
+          designType: "user_journey",
+          prdContent: {
+            features: mastraAgents.ideaGeneration.ideaData?.features || [],
+            userPersonas: [],
+            userStories: mastraAgents.userStoryGeneration.userStoriesData || []
+          }
+        })
         break
       case "feedback":
-        // Handle feedback routing
+        mastraAgents.feedbackRouting.routeFeedback({
+          feedback: message,
+          context: {
+            currentStep: "feedback",
+            hasIdea: !!mastraAgents.ideaGeneration.ideaData,
+            hasUserStories: !!mastraAgents.userStoryGeneration.userStoriesData,
+            hasPRD: !!mastraAgents.prdGeneration.prdData,
+          }
+        })
         break
     }
   }
@@ -221,7 +267,7 @@ function ProductMaestroApp() {
     )
 
     try {
-      const results = await workflow.runCompleteWorkflow(initialIdea)
+      const results = await mastraAgents.workflow.runCompleteWorkflow(initialIdea)
       conversation.addSystemMessage(
         "✅ Complete workflow finished successfully!"
       )
@@ -240,20 +286,108 @@ function ProductMaestroApp() {
     }
   }
 
+  const handleRunSequentialWorkflow = async (initialIdea: string) => {
+    conversation.addUserMessage(initialIdea)
+    conversation.addSystemMessage(
+      "🔄 Starting sequential agent workflow..."
+    )
+
+    try {
+      // Step 1: Generate refined idea
+      conversation.addSystemMessage("🚀 Step 1: Generating refined idea...")
+      await mastraAgents.ideaGeneration.generateIdeaAsync({ 
+        idea: initialIdea, 
+        context: "Please provide a comprehensive analysis with structured output including features, personas, and market validation."
+      })
+
+      // Wait for completion and check result
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      if (!mastraAgents.ideaGeneration.isSuccess || !mastraAgents.ideaGeneration.ideaData) {
+        throw new Error("Idea generation failed")
+      }
+
+      // Step 2: Generate user stories
+      conversation.addSystemMessage("📝 Step 2: Generating user stories...")
+      await mastraAgents.userStoryGeneration.generateUserStoriesAsync({
+        productIdea: mastraAgents.ideaGeneration.ideaData,
+        userPersonas: []
+      })
+
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      if (!mastraAgents.userStoryGeneration.isSuccess) {
+        throw new Error("User story generation failed")
+      }
+
+      // Step 3: Generate PRD
+      conversation.addSystemMessage("📋 Step 3: Generating PRD...")
+      await mastraAgents.prdGeneration.generatePRDAsync({
+        productIdea: mastraAgents.ideaGeneration.ideaData,
+        userPersonas: [],
+        userStories: mastraAgents.userStoryGeneration.userStoriesData || []
+      })
+
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      if (!mastraAgents.prdGeneration.isSuccess) {
+        throw new Error("PRD generation failed")
+      }
+
+      // Step 4: Generate sprint plan
+      conversation.addSystemMessage("⚡ Step 4: Generating sprint plan...")
+      await mastraAgents.sprintPlanning.generateSprintPlanAsync({
+        userStories: mastraAgents.userStoryGeneration.userStoriesData || [],
+        teamVelocity: 20,
+        sprintDuration: 2
+      })
+
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      if (!mastraAgents.sprintPlanning.isSuccess) {
+        throw new Error("Sprint planning failed")
+      }
+
+      // Step 5: Generate visual design
+      conversation.addSystemMessage("🎨 Step 5: Generating visual design...")
+      await mastraAgents.visualDesign.generateVisualDesignAsync({
+        projectTitle: mastraAgents.ideaGeneration.ideaData?.title || "Product Vision",
+        designType: "user_journey",
+        prdContent: {
+          features: mastraAgents.ideaGeneration.ideaData?.features || [],
+          userPersonas: [],
+          userStories: mastraAgents.userStoryGeneration.userStoriesData || []
+        }
+      })
+
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      conversation.addSystemMessage(
+        "✅ Sequential workflow completed successfully! All artifacts generated."
+      )
+    } catch (error) {
+      conversation.addSystemMessage(
+        `❌ Sequential workflow failed at: ${error}. You can continue with individual agents.`
+      )
+      console.error("Sequential workflow failed:", error)
+    }
+  }
+
   const getProgress = () => {
-    const steps = ["idea", "userStories", "prd", "sprints", "visual"] as const
-    const completed = steps.filter(step => workflow.allResults[step]).length
+    const steps = [
+      mastraAgents.ideaGeneration.ideaData,
+      mastraAgents.userStoryGeneration.userStoriesData,
+      mastraAgents.prdGeneration.prdData,
+      mastraAgents.sprintPlanning.sprintData,
+      mastraAgents.visualDesign.visualData
+    ]
+    const completed = steps.filter(step => !!step).length
     return (completed / steps.length) * 100
   }
 
   const getCompletedSteps = () => {
-    const results = workflow.allResults
     return {
-      idea: !!results.idea,
-      userStories: !!results.userStories,
-      prd: !!results.prd,
-      sprints: !!results.sprints,
-      visual: !!results.visual,
+      idea: !!mastraAgents.ideaGeneration.ideaData,
+      userStories: !!mastraAgents.userStoryGeneration.userStoriesData,
+      prd: !!mastraAgents.prdGeneration.prdData,
+      sprints: !!mastraAgents.sprintPlanning.sprintData,
+      visual: !!mastraAgents.visualDesign.visualData,
     }
   }
 
@@ -285,7 +419,7 @@ function ProductMaestroApp() {
               <Button
                 variant="outline"
                 onClick={conversation.clearConversation}
-                disabled={workflow.isAnyGenerating}
+                disabled={mastraAgents.isAnyGenerating}
                 className="btn-hover"
               >
                 New Session
@@ -339,8 +473,9 @@ function ProductMaestroApp() {
             <ChatInterface
               onAgentCall={handleAgentCall}
               onWorkflowRun={handleRunCompleteWorkflow}
+              onSequentialWorkflow={handleRunSequentialWorkflow}
               conversation={conversation}
-              isLoading={workflow.isAnyGenerating}
+              isLoading={mastraAgents.isAnyGenerating}
               currentAgent={conversation.currentAgent}
             />
           </div>
@@ -359,7 +494,13 @@ function ProductMaestroApp() {
                 </CardHeader>
                 <CardContent>
                   <ResultsDashboard
-                    artifacts={workflow.allResults}
+                    artifacts={{
+                      idea: mastraAgents.ideaGeneration.ideaData,
+                      userStories: mastraAgents.userStoryGeneration.userStoriesData,
+                      prd: mastraAgents.prdGeneration.prdData,
+                      sprints: mastraAgents.sprintPlanning.sprintData,
+                      visual: mastraAgents.visualDesign.visualData
+                    }}
                     conversation={conversation}
                   />
                 </CardContent>
@@ -374,8 +515,8 @@ function ProductMaestroApp() {
 
 export default function Home() {
   return (
-    <QueryProvider>
+    <>
       <ProductMaestroApp />
-    </QueryProvider>
+    </>
   )
 }

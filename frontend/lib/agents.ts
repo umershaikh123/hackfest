@@ -35,6 +35,7 @@ export interface IdeaGenerationResponse {
   targetAudience: string
   problemStatement: string
   successCriteria: string[]
+  rawResponse: string
 }
 
 export interface UserStoryResponse {
@@ -52,6 +53,7 @@ export interface UserStoryResponse {
     goals: string[]
     painPoints: string[]
   }>
+  rawResponse: string
 }
 
 export interface PRDResponse {
@@ -60,6 +62,8 @@ export interface PRDResponse {
   notionUrl?: string
   sections: string[]
   wordCount: number
+  content: string
+  rawResponse: string
 }
 
 export interface SprintPlannerResponse {
@@ -76,6 +80,8 @@ export interface SprintPlannerResponse {
   }>
   linearCycleId?: string
   linearUrl?: string
+  content: string
+  rawResponse: string
 }
 
 export interface VisualDesignResponse {
@@ -86,6 +92,8 @@ export interface VisualDesignResponse {
     elementCount: number
     description: string
   }>
+  content: string
+  rawResponse: string
 }
 
 export interface FeedbackResponse {
@@ -97,7 +105,7 @@ export interface FeedbackResponse {
 }
 
 // API base URL configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4111"
 
 /**
  * Call a specific agent with error handling and type safety

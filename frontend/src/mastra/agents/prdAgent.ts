@@ -12,7 +12,7 @@ import {
   ProductIdeaSchema,
   UserPersonaSchema,
   UserStorySchema,
-} from "../../types.ts/productMaestro"
+} from "../../types/productMaestro"
 
 // Input schema for the PRD Agent
 const PRDAgentInputSchema = z.object({
@@ -165,9 +165,7 @@ export async function generateAndPublishPRD(
     console.error("❌ PRD Agent Error:", error)
     return {
       success: false,
-      message: `Failed to generate PRD: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`,
+      message: `Failed to generate PRD: ${error instanceof Error ? error.message : "Unknown error"}`,
     }
   }
 }
