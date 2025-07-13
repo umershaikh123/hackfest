@@ -1,46 +1,48 @@
 {
-  "name": "product-maestro",
+  "name": "product-maestro-monorepo",
   "version": "1.0.0",
-  "main": "index.js",
-  "description": "AI-powered no-code IDE for product managers",
+  "private": true,
+  "description": "AI-powered no-code IDE for product managers - Monorepo",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "mastra dev",
-    "build": "mastra build",
-    "start": "mastra start",
-    "test:idea": "tsx src/test/testIdeaGeneration.ts",
-    "test:rag": "tsx src/test/testRAGSetup.ts",
-    "test:prd": "tsx src/test/testPRDGeneration.ts",
-    "type-check": "tsc --noEmit"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
-  "engines": {
-    "node": ">=20.9.0"
-  },
-  "dependencies": {
-    "@ai-sdk/anthropic": "^1.2.12",
-    "@ai-sdk/google": "^1.2.22",
-    "@ai-sdk/openai": "latest",
-    "@anthropic-ai/claude-code": "^1.0.51",
-    "@mastra/core": "^0.10.12",
-    "@mastra/libsql": "^0.11.0",
-    "@mastra/loggers": "^0.10.3",
-    "@mastra/mcp": "^0.10.6",
-    "@mastra/memory": "^0.11.2",
-    "@mastra/pinecone": "latest",
-    "@mastra/rag": "latest",
-    "@notionhq/client": "^4.0.1",
-    "ai": "^4.3.17",
-    "dotenv": "^16.0.0",
-    "zod": "^3.25.76"
+    "dev": "concurrently \"pnpm run backend:dev\" \"pnpm run frontend:dev\"",
+    "build": "pnpm run backend:build && pnpm run frontend:build",
+    "start": "concurrently \"pnpm run backend:start\" \"pnpm run frontend:start\"",
+    "lint": "pnpm run backend:lint && pnpm run frontend:lint",
+    "type-check": "pnpm run backend:type-check && pnpm run frontend:type-check",
+    "test": "pnpm run backend:test",
+    "test:all": "pnpm run backend:test:idea && pnpm run backend:test:rag && pnpm run backend:test:prd && pnpm run backend:test:sprint && pnpm run backend:test:visual && pnpm run backend:test:feedback",
+    "clean": "pnpm run backend:clean && pnpm run frontend:clean",
+    "clean:all": "pnpm run clean && rm -rf node_modules",
+    "reset": "pnpm run clean:all && pnpm install",
+    "check": "pnpm run type-check && pnpm run lint",
+    "backend:dev": "pnpm --filter backend run dev",
+    "backend:build": "pnpm --filter backend run build",
+    "backend:start": "pnpm --filter backend run start",
+    "backend:lint": "pnpm --filter backend run lint || true",
+    "backend:type-check": "pnpm --filter backend run type-check",
+    "backend:test": "pnpm --filter backend run test || true",
+    "backend:test:idea": "pnpm --filter backend run test:idea",
+    "backend:test:rag": "pnpm --filter backend run test:rag",
+    "backend:test:prd": "pnpm --filter backend run test:prd",
+    "backend:test:sprint": "pnpm --filter backend run test:sprint",
+    "backend:test:visual": "pnpm --filter backend run test:visual",
+    "backend:test:feedback": "pnpm --filter backend run test:feedback",
+    "backend:test:conversational": "pnpm --filter backend run test:conversational",
+    "backend:clean": "pnpm --filter backend run clean || rm -rf backend/.mastra backend/node_modules",
+    "frontend:dev": "pnpm --filter frontend run dev",
+    "frontend:build": "pnpm --filter frontend run build",
+    "frontend:start": "pnpm --filter frontend run start",
+    "frontend:lint": "pnpm --filter frontend run lint",
+    "frontend:type-check": "pnpm --filter frontend run type-check",
+    "frontend:clean": "pnpm --filter frontend run clean || rm -rf frontend/.next frontend/node_modules",
+    "install:all": "pnpm install && pnpm --filter backend install && pnpm --filter frontend install"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "mastra": "^0.10.12",
-    "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
-  }
+    "concurrently": "^7.6.0"
+  },
+  "engines": {
+    "node": ">=20.9.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
 }
