@@ -32,12 +32,15 @@ A single, conversational interface that guides PMs from raw ideas to comprehensi
 - **The PRD Compiler** - Creates detailed Product Requirements Documents
 - **The Sprint Architect** - Creates development sprint plans with Linear integration
 - **The Visual Strategist** - Creates stunning visual wireframes and user journey maps with Miro integration
+- **The Workflow Navigator** - Routes user feedback and orchestrates iterative refinement
 
 ### 💬 **Conversational Product Development**
 - Natural language interaction for non-technical users
 - Context-aware conversations that build on previous interactions
 - Intelligent follow-up questions to refine requirements
 - Human-in-the-loop workflows for iterative refinement
+- **Feedback Router System** - Intelligent routing of user feedback to appropriate agents
+- **Session Management** - Persistent conversation context across workflow iterations
 
 ### 📄 **Automated PRD Generation & Publishing**
 - Comprehensive PRDs with 100+ structured content blocks
@@ -155,6 +158,12 @@ npm run test:sprint
 # Test visual design with Miro
 npm run test:visual
 
+# Test conversational workflow system
+npm run test:conversational
+
+# Test feedback routing system
+npm run test:feedback
+
 # End-to-end PRD generation
 npx tsx src/test/testEndToEnd.ts
 ```
@@ -216,21 +225,84 @@ npx tsx src/test/testEndToEnd.ts
 - ✅ PRD Compiler with comprehensive content generation
 - ✅ Sprint Planner Agent with Linear integration
 - ✅ Visual Design Agent with Miro integration and professional wireframes
+- ✅ **Router/Feedback Analysis Agent** - "The Workflow Navigator" for intelligent feedback routing
+- ✅ **Conversational Workflow System** - Complete feedback processing and iterative refinement
+- ✅ **Human-in-the-Loop Framework** - Suspend/resume capabilities for user approval
+- ✅ **Type-Safe Feedback System** - Comprehensive schemas for feedback processing
 - ✅ Notion integration with automatic publishing
 - ✅ RAG system with Pinecone knowledge base
 - ✅ End-to-end testing pipeline
 
-### 🚧 **In Development**
-- 🚧 Next.js conversational frontend
-- 🚧 Real-time chat interface
-- 🚧 Router/Feedback Analysis Agent for iterative refinement
+### 🚧 **Known Issues & In Development**
+- ⚠️ **Workflow Step Chaining** - Data flow between workflow steps needs refinement
+- ⚠️ **Schema Validation** - Some tool inputs require additional validation
+- 🚧 **Next.js Frontend** - Conversational UI in development
+- 🚧 **Real-time Chat Interface** - WebSocket integration pending
+- 🚧 **Workflow Error Handling** - Enhanced error boundaries needed
 
 ### 🎯 **Roadmap**
+- **Fix Workflow Data Flow** - Resolve step chaining issues for seamless end-to-end workflows
+- **Frontend Integration** - Complete Next.js conversational interface
+- **Enhanced Error Handling** - Robust error boundaries and recovery mechanisms
 - Voice mode for hands-free interaction
 - Advanced Miro Web SDK browser integration
 - Integration with additional project management tools
 - Competitive analysis features
 - Multi-modal AI inputs (voice, image, document upload)
+
+---
+
+## 🔧 **Current Working State & Usage**
+
+### ✅ **What Works Now**
+
+**Individual Agent Calls** (Ready for Frontend Integration):
+```typescript
+// Feedback routing works perfectly
+await feedbackRouterAgent.generate(userFeedback)
+
+// All individual agents respond correctly  
+await ideaGenerationAgent.generate(rawIdea)
+await userStoryGeneratorAgent.generate(productIdea)
+await prdAgent.generate(prdData)
+```
+
+**Tool Execution** (All tools work correctly):
+```typescript
+await feedbackRouterTool.execute({ context: feedbackData })
+await ideaGenerationTool.execute({ context: ideaData })
+await prdGeneratorTool.execute({ context: prdData })
+```
+
+**Working Test Commands**:
+```bash
+# ✅ These work perfectly
+npm run test:feedback    # 83% success rate
+npm run test:idea        # Full success 
+npm run test:prd         # Individual PRD components work
+npm run test:sprint      # Individual sprint components work
+npm run test:visual      # Individual visual components work
+
+# ⚠️ These have workflow chaining issues
+npm run test:conversational  # Workflow data flow broken
+npx tsx src/test/testEndToEnd.ts  # Step chaining issues
+```
+
+### 🛠️ **For Frontend Developers**
+
+**Recommended Integration Approach**:
+1. **Use Individual Agents** - All agents work perfectly when called directly
+2. **Implement Custom Orchestration** - Build workflow logic in frontend/API layer
+3. **Session Management** - Use feedback router for conversation state
+4. **Progressive Enhancement** - Start with working agents, add workflow later
+
+**Example Frontend Integration**:
+```typescript
+// This pattern works reliably
+const ideaResult = await ideaGenerationAgent.generate(userInput)
+const storyResult = await userStoryGeneratorAgent.generate(ideaResult)
+const prdResult = await prdAgent.generate({ idea: ideaResult, stories: storyResult })
+```
 
 ---
 

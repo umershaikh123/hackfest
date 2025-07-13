@@ -13,6 +13,8 @@
     "test:prd": "tsx src/test/testPRDGeneration.ts",
     "test:sprint": "tsx src/test/testSprintPlanner.ts",
     "test:visual": "tsx src/test/testVisualDesign.ts",
+    "test:conversational": "tsx src/test/testConversationalWorkflow.ts",
+    "test:feedback": "tsx src/test/testFeedbackRouter.ts",
     "miro:setup": "tsx src/scripts/miroSimpleAuth.ts",
     "miro:auto": "tsx src/scripts/miroRedirectHandler.ts",
     "miro:token": "tsx src/scripts/miroSimpleAuth.ts",

@@ -154,6 +154,45 @@ export const PRDSchema = z.object({
 
 export type PRD = z.infer<typeof PRDSchema>
 
+// Feedback and routing schema
+export const FeedbackTypeSchema = z.enum([
+  "idea_refinement",
+  "user_story_modification", 
+  "prd_revision",
+  "sprint_adjustment",
+  "visual_design_change",
+  "general_clarification",
+  "workflow_direction"
+])
+
+export const FeedbackSchema = z.object({
+  type: FeedbackTypeSchema,
+  content: z.string().describe("The actual feedback from the user"),
+  targetStep: z.string().optional().describe("Which step to route feedback to"),
+  priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
+  context: z.record(z.any()).optional().describe("Additional context for the feedback"),
+  timestamp: z.string(),
+})
+
+export const RoutingDecisionSchema = z.object({
+  targetAgent: z.enum([
+    "idea_generation", 
+    "user_story_generator", 
+    "prd_agent", 
+    "sprint_planner", 
+    "visual_design",
+    "workflow_orchestrator"
+  ]),
+  reasoning: z.string().describe("Why this agent was chosen"),
+  actionRequired: z.string().describe("What specific action the agent should take"),
+  contextToPass: z.record(z.any()).optional().describe("Relevant context to pass to the agent"),
+  shouldSuspendWorkflow: z.boolean().default(false).describe("Whether to pause workflow for user input"),
+})
+
+export type FeedbackType = z.infer<typeof FeedbackTypeSchema>
+export type Feedback = z.infer<typeof FeedbackSchema>
+export type RoutingDecision = z.infer<typeof RoutingDecisionSchema>
+
 // Runtime context types for workflow state management
 export type ProductMaestroContext = {
   sessionId: string
@@ -165,6 +204,8 @@ export type ProductMaestroContext = {
   designSystem?: DesignSystem
   sprints?: Sprint[]
   prd?: PRD
-  userFeedback?: string[]
+  userFeedback?: Feedback[]
   iterationCount?: number
+  pendingActions?: string[]
+  lastRoutingDecision?: RoutingDecision
 }
