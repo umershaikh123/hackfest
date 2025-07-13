@@ -11,14 +11,16 @@ class PositionManager {
   private rowHeight = 250
   private maxColumns = 4
 
-  getNextPosition(type: 'header' | 'persona' | 'feature' | 'journey' | 'process' = 'feature') {
+  getNextPosition(
+    type: "header" | "persona" | "feature" | "journey" | "process" = "feature"
+  ) {
     let position
-    
+
     switch (type) {
-      case 'header':
+      case "header":
         position = { x: 0, y: -400 }
         break
-      case 'persona':
+      case "persona":
         position = { x: this.currentX, y: -200 }
         this.currentX += this.columnWidth
         if (this.currentX >= this.maxColumns * this.columnWidth) {
@@ -26,11 +28,11 @@ class PositionManager {
           this.currentY += this.rowHeight
         }
         break
-      case 'journey':
+      case "journey":
         position = { x: this.currentX, y: 200 }
         this.currentX += this.columnWidth
         break
-      case 'process':
+      case "process":
         position = { x: this.currentX, y: 400 }
         this.currentX += this.columnWidth
         break
@@ -42,10 +44,10 @@ class PositionManager {
           this.currentY += this.rowHeight
         }
     }
-    
+
     return position
   }
-  
+
   reset() {
     this.currentX = 0
     this.currentY = 0
@@ -79,12 +81,16 @@ class MiroAPIClient {
       try {
         const errorJson = JSON.parse(errorText)
         if (errorJson.context && errorJson.context.fields) {
-          errorDetails = errorJson.context.fields.map((f: any) => `${f.field}: ${f.message}`).join(", ")
+          errorDetails = errorJson.context.fields
+            .map((f: any) => `${f.field}: ${f.message}`)
+            .join(", ")
         }
       } catch {
         errorDetails = errorText
       }
-      throw new Error(`Miro API error: ${response.status} ${response.statusText} - ${errorDetails}`)
+      throw new Error(
+        `Miro API error: ${response.status} ${response.statusText} - ${errorDetails}`
+      )
     }
 
     return response.json()
@@ -103,113 +109,123 @@ class MiroAPIClient {
   async createWorkflowItems(boardId: string, items: any[]) {
     const results = []
     this.positionManager.reset() // Reset positioning for new board
-    
+
     for (const item of items) {
       try {
         let result
-        const cleanContent = item.data.content?.replace(/<[^>]*>/g, '') || item.title || "Element"
-        
+        const cleanContent =
+          item.data.content?.replace(/<[^>]*>/g, "") || item.title || "Element"
+
         // Use smart positioning if no position provided
-        const position = item.position || this.positionManager.getNextPosition(item.layoutType || 'feature')
-        
+        const position =
+          item.position ||
+          this.positionManager.getNextPosition(item.layoutType || "feature")
+
         switch (item.type) {
           case "sticky_note":
             result = await this.createStickyNote(boardId, {
               content: cleanContent,
               position: position,
-              style: item.style
+              style: item.style,
             })
             break
-            
+
           case "shape":
             result = await this.createShape(boardId, {
               content: cleanContent,
               position: position,
               geometry: item.geometry,
               style: item.style,
-              shape: item.shape || "rectangle"
+              shape: item.shape || "rectangle",
             })
             break
-            
+
           case "text":
             result = await this.createText(boardId, {
               content: cleanContent,
               position: position,
               geometry: item.geometry,
-              style: item.style
+              style: item.style,
             })
             break
-            
+
           case "card":
             result = await this.createCard(boardId, {
               title: item.title || "Card",
               description: cleanContent,
               position: position,
-              style: item.style
+              style: item.style,
             })
             break
-            
+
           default:
             // Default to sticky note for unknown types
             result = await this.createStickyNote(boardId, {
               content: cleanContent,
               position: position,
-              style: item.style
+              style: item.style,
             })
         }
-        
+
         if (result) {
           results.push(result)
-          console.log(`✅ Created ${item.type || 'sticky_note'}: ${cleanContent.substring(0, 30)}...`)
+          console.log(
+            `✅ Created ${item.type || "sticky_note"}: ${cleanContent.substring(0, 30)}...`
+          )
         }
       } catch (error) {
-        console.warn(`⚠️ Failed to create ${item.type || 'item'}:`, error.message)
-        
+        console.warn(`⚠️ Failed to create ${item.type || "item"}:`, error)
+
         // Fallback to basic sticky note
         try {
           const fallbackResult = await this.createStickyNote(boardId, {
             content: "Visual Element",
             position: item.position,
-            style: { fillColor: "#ffeb3b" }
+            style: { fillColor: "#ffeb3b" },
           })
           results.push(fallbackResult)
         } catch (fallbackError) {
-          console.error(`❌ Fallback creation failed:`, fallbackError.message)
+          console.error(`❌ Fallback creation failed:`, fallbackError)
         }
       }
     }
-    
+
     return results
   }
-  
+
   // Create sticky note
   async createStickyNote(boardId: string, options: any) {
     const payload = {
       data: {
         content: (options.content || "Visual Element").substring(0, 6000), // Miro limit
-        shape: "square"
+        shape: "square",
       },
       position: {
         x: options.position.x,
         y: options.position.y,
-        origin: "center"
+        origin: "center",
       },
       style: {
-        fillColor: this.getMiroColor(options.style?.fillColor, 'sticky_note') || "light_yellow",
+        fillColor:
+          this.getMiroColor(options.style?.fillColor, "sticky_note") ||
+          "light_yellow",
         textAlign: "center",
-        textAlignVertical: "top"
-      }
+        textAlignVertical: "top",
+      },
     }
     return this.request(`/boards/${boardId}/sticky_notes`, "POST", payload)
   }
-  
+
   // Map our colors to Miro's supported colors
-  getMiroColor(color: string, elementType: 'sticky_note' | 'card' | 'shape' | 'text' = 'sticky_note'): string {
+  getMiroColor(
+    color: string,
+    elementType: "sticky_note" | "card" | "shape" | "text" = "sticky_note"
+  ): string {
     // Miro's supported named colors for sticky notes and cards
     const namedColorMap: Record<string, string> = {
       "#fff9c4": "light_yellow",
       "#ffeb3b": "yellow",
-      "#ff9800": "orange", 
+      "#ff9800": "orange",
       "#4caf50": "green",
       "#00bcd4": "cyan",
       "#e91e63": "pink",
@@ -219,109 +235,112 @@ class MiroAPIClient {
       "#607d8b": "gray",
       "#ffcdd2": "light_pink",
       "#c8e6c9": "light_green",
-      "#bbdefb": "light_blue"
+      "#bbdefb": "light_blue",
     }
-    
+
     // For sticky notes and cards, use named colors only
-    if (elementType === 'sticky_note' || elementType === 'card') {
+    if (elementType === "sticky_note" || elementType === "card") {
       return namedColorMap[color] || "light_yellow"
     }
-    
+
     // For shapes and text, prefer hex colors but validate format
-    if (color && color.startsWith('#') && /^#[0-9A-F]{6}$/i.test(color)) {
+    if (color && color.startsWith("#") && /^#[0-9A-F]{6}$/i.test(color)) {
       return color
     }
-    
+
     // Fallback to mapped color or default
     return namedColorMap[color] || "#ffffff"
   }
-  
+
   // Create shape
   async createShape(boardId: string, options: any) {
     const payload = {
       data: {
         shape: options.shape || "rectangle",
-        content: (options.content || "Shape").substring(0, 6000)
+        content: (options.content || "Shape").substring(0, 6000),
       },
       position: {
         x: options.position.x,
         y: options.position.y,
-        origin: "center"
+        origin: "center",
       },
       geometry: {
         width: options.geometry?.width || 200,
         height: options.geometry?.height || 100,
-        rotation: 0
+        rotation: 0,
       },
       style: {
-        fillColor: this.getMiroColor(options.style?.fillColor, 'shape') || "#ffffff",
+        fillColor:
+          this.getMiroColor(options.style?.fillColor, "shape") || "#ffffff",
         fillOpacity: 1.0,
-        borderColor: this.getMiroColor(options.style?.borderColor, 'shape') || "#1a73e8",
+        borderColor:
+          this.getMiroColor(options.style?.borderColor, "shape") || "#1a73e8",
         borderStyle: "normal",
         borderWidth: Math.min(options.style?.borderWidth || 2, 24),
         fontFamily: "arial",
         fontSize: Math.min(options.style?.fontSize || 14, 96),
         textAlign: "center",
-        color: "#1a1a1a"
-      }
+        color: "#1a1a1a",
+      },
     }
     return this.request(`/boards/${boardId}/shapes`, "POST", payload)
   }
-  
+
   // Create text
   async createText(boardId: string, options: any) {
     const payload = {
       data: {
-        content: (options.content || "Text").substring(0, 6000)
+        content: (options.content || "Text").substring(0, 6000),
       },
       position: {
         x: options.position.x,
         y: options.position.y,
-        origin: "center"
+        origin: "center",
       },
       geometry: {
-        width: options.geometry?.width || 320
+        width: options.geometry?.width || 320,
       },
       style: {
         color: "#1a1a1a",
-        fillColor: this.getMiroColor(options.style?.fillColor, 'text') || "#ffffff",
+        fillColor:
+          this.getMiroColor(options.style?.fillColor, "text") || "#ffffff",
         fillOpacity: 1.0,
         fontFamily: "arial",
         fontSize: Math.min(options.style?.fontSize || 16, 96),
-        textAlign: options.style?.textAlign || "center"
-      }
+        textAlign: options.style?.textAlign || "center",
+      },
     }
     return this.request(`/boards/${boardId}/texts`, "POST", payload)
   }
-  
+
   // Create card
   async createCard(boardId: string, options: any) {
     const payload = {
       data: {
         title: options.title || "Card",
-        description: options.description || options.content || ""
+        description: options.description || options.content || "",
       },
       position: {
         x: options.position.x,
         y: options.position.y,
-        origin: "center"
-      }
+        origin: "center",
+      },
     }
     return this.request(`/boards/${boardId}/cards`, "POST", payload)
   }
-  
+
   // Get sticky note color for cards (they use the same color system)
   getStickyNoteColor(color: string): string {
     const colorMap: Record<string, string> = {
       "#1a73e8": "blue",
-      "#34a853": "green", 
+      "#34a853": "green",
       "#9c27b0": "violet",
       "#ff9800": "orange",
       "#f44336": "red",
       "#00bcd4": "cyan",
       "#e91e63": "pink",
       "#607d8b": "gray",
-      "#ffeb3b": "yellow"
+      "#ffeb3b": "yellow",
     }
     return colorMap[color] || "light_yellow"
   }
@@ -329,7 +348,7 @@ class MiroAPIClient {
   // Create connectors between workflow steps
   async createConnectors(boardId: string, connectors: any[]) {
     const results = []
-    
+
     for (const connector of connectors) {
       try {
         const payload = {
@@ -338,19 +357,23 @@ class MiroAPIClient {
           style: {
             strokeColor: connector.style?.strokeColor || "#1a73e8",
             strokeWidth: connector.style?.strokeWidth || 2,
-            strokeStyle: "solid"
+            strokeStyle: "solid",
           },
-          captions: connector.captions || []
+          captions: connector.captions || [],
         }
-        
-        const result = await this.request(`/boards/${boardId}/connectors`, "POST", payload)
+
+        const result = await this.request(
+          `/boards/${boardId}/connectors`,
+          "POST",
+          payload
+        )
         results.push(result)
         console.log(`✅ Created connector`)
       } catch (error) {
-        console.warn(`⚠️ Failed to create connector:`, error.message)
+        console.warn(`⚠️ Failed to create connector:`, error)
       }
     }
-    
+
     return results
   }
 }
@@ -361,42 +384,56 @@ export const visualDesignTool = createTool({
   description: `Creates visual workflows, user flows, and process diagrams from PRD content using Miro API. This tool specializes in user journey mapping, process flow diagrams, workflow visualization, user research artifacts, and system architecture diagrams. Output: Interactive Miro boards with collaborative editing capabilities.`,
   inputSchema: z.object({
     projectTitle: z.string().describe("Project name for the board"),
-    designType: z.enum([
-      "comprehensive_board",
-      "user_journey",
-      "process_workflow"
-    ]).describe("Type of visual design to create - comprehensive_board combines multiple elements"),
+    designType: z
+      .enum(["comprehensive_board", "user_journey", "process_workflow"])
+      .describe(
+        "Type of visual design to create - comprehensive_board combines multiple elements"
+      ),
     prdContent: z.object({
-      features: z.array(z.object({
-        name: z.string(),
-        description: z.string(),
-        acceptanceCriteria: z.array(z.string()),
-        priority: z.enum(["high", "medium", "low"]),
-      })),
-      userPersonas: z.array(z.object({
-        name: z.string(),
-        role: z.string(),
-        demographics: z.string(),
-        needs: z.array(z.string()),
-        painPoints: z.array(z.string()),
-        goals: z.array(z.string()),
-      })).optional(),
-      userStories: z.array(z.object({
-        id: z.string(),
-        title: z.string(),
-        persona: z.string(),
-        userAction: z.string(),
-        benefit: z.string(),
-        acceptanceCriteria: z.array(z.string()),
-        priority: z.enum(["low", "medium", "high", "critical"]),
-      })).optional(),
+      features: z.array(
+        z.object({
+          name: z.string(),
+          description: z.string(),
+          acceptanceCriteria: z.array(z.string()),
+          priority: z.enum(["high", "medium", "low"]),
+        })
+      ),
+      userPersonas: z
+        .array(
+          z.object({
+            name: z.string(),
+            role: z.string(),
+            demographics: z.string(),
+            needs: z.array(z.string()),
+            painPoints: z.array(z.string()),
+            goals: z.array(z.string()),
+          })
+        )
+        .optional(),
+      userStories: z
+        .array(
+          z.object({
+            id: z.string(),
+            title: z.string(),
+            persona: z.string(),
+            userAction: z.string(),
+            benefit: z.string(),
+            acceptanceCriteria: z.array(z.string()),
+            priority: z.enum(["low", "medium", "high", "critical"]),
+          })
+        )
+        .optional(),
     }),
-    boardSettings: z.object({
-      includePersonas: z.boolean().default(true),
-      includeDecisionPoints: z.boolean().default(true),
-      includeAlternativePaths: z.boolean().default(false),
-      colorScheme: z.enum(["blue", "green", "purple", "orange"]).default("blue"),
-    }).optional(),
+    boardSettings: z
+      .object({
+        includePersonas: z.boolean().default(true),
+        includeDecisionPoints: z.boolean().default(true),
+        includeAlternativePaths: z.boolean().default(false),
+        colorScheme: z
+          .enum(["blue", "green", "purple", "orange"])
+          .default("blue"),
+      })
+      .optional(),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -421,7 +458,7 @@ export const visualDesignTool = createTool({
         projectTitle,
         designType,
         prdContent,
-        boardSettings = {}
+        boardSettings = {},
       } = context
 
       // Validate Miro API key
@@ -429,21 +466,25 @@ export const visualDesignTool = createTool({
       if (!miroApiKey) {
         console.error("❌ MIRO_API_KEY not found in environment variables")
         console.log("💡 Please add MIRO_API_KEY to your .env file")
-        console.log("🔗 Get your API key from: https://miro.com/app/settings/user-profile/apps")
+        console.log(
+          "🔗 Get your API key from: https://miro.com/app/settings/user-profile/apps"
+        )
         throw new Error("MIRO_API_KEY not found in environment variables")
       }
-      
+
       console.log("✅ MIRO_API_KEY found - proceeding with board creation")
-      console.log(`🔑 API Key: ${miroApiKey.substring(0, 10)}...${miroApiKey.substring(miroApiKey.length - 4)}`)
+      console.log(
+        `🔑 API Key: ${miroApiKey.substring(0, 10)}...${miroApiKey.substring(miroApiKey.length - 4)}`
+      )
 
       const miroClient = new MiroAPIClient(miroApiKey)
 
       console.log(`🎨 Creating ${designType} for ${projectTitle}...`)
 
       // Create Miro board
-      const boardName = `${projectTitle} - ${designType.replace('_', ' ').toUpperCase()}`
+      const boardName = `${projectTitle} - ${designType.replace("_", " ").toUpperCase()}`
       const boardDescription = `Generated by Product Maestro: ${designType} visualization for ${projectTitle}`
-      
+
       const board = await miroClient.createBoard(boardName, boardDescription)
       console.log(`📋 Created Miro board: ${board.name}`)
 
@@ -454,16 +495,24 @@ export const visualDesignTool = createTool({
 
       switch (designType) {
         case "comprehensive_board":
-          ({ items, connectors, elementsBreakdown } = generateComprehensiveBoard(prdContent, boardSettings))
+          ;({ items, connectors, elementsBreakdown } =
+            generateComprehensiveBoard(prdContent, boardSettings))
           break
         case "user_journey":
-          ({ items, connectors, elementsBreakdown } = generateUserJourney(prdContent, boardSettings))
+          ;({ items, connectors, elementsBreakdown } = generateUserJourney(
+            prdContent,
+            boardSettings
+          ))
           break
         case "process_workflow":
-          ({ items, connectors, elementsBreakdown } = generateProcessWorkflow(prdContent, boardSettings))
+          ;({ items, connectors, elementsBreakdown } = generateProcessWorkflow(
+            prdContent,
+            boardSettings
+          ))
           break
         default:
-          ({ items, connectors, elementsBreakdown } = generateComprehensiveBoard(prdContent, boardSettings))
+          ;({ items, connectors, elementsBreakdown } =
+            generateComprehensiveBoard(prdContent, boardSettings))
       }
 
       // Create items on Miro board
@@ -471,11 +520,18 @@ export const visualDesignTool = createTool({
       console.log(`📝 Created ${createdItems.length} visual elements`)
 
       // Create connectors
-      const createdConnectors = await miroClient.createConnectors(board.id, connectors)
+      const createdConnectors = await miroClient.createConnectors(
+        board.id,
+        connectors
+      )
       console.log(`🔗 Created ${createdConnectors.length} connectors`)
 
       // Generate recommendations
-      const recommendations = generateRecommendations(designType, prdContent, createdItems.length)
+      const recommendations = generateRecommendations(
+        designType,
+        prdContent,
+        createdItems.length
+      )
       const nextSteps = generateNextSteps(designType, board.viewLink)
 
       return {
@@ -495,10 +551,9 @@ export const visualDesignTool = createTool({
         recommendations,
         nextSteps,
       }
-
     } catch (error) {
       console.error("❌ Visual Design Tool error:", error)
-      throw new Error(`Visual design generation failed: ${error.message}`)
+      throw new Error(`Visual design generation failed: ${error}`)
     }
   },
 })
@@ -517,17 +572,17 @@ function generateComprehensiveBoard(prdContent: any, settings: any) {
 
   const colors = {
     blue: "#1a73e8",
-    green: "#34a853", 
+    green: "#34a853",
     purple: "#9c27b0",
     orange: "#ff9800",
     red: "#f44336",
     teal: "#00bcd4",
     indigo: "#3f51b5",
-    pink: "#e91e63"
+    pink: "#e91e63",
   }
 
   const colorScheme = settings.colorScheme || "blue"
-  const primaryColor = colors[colorScheme] || colors.blue
+  const primaryColor = colors[colorScheme as keyof typeof colors] || colors.blue
 
   // Main board title as large text
   items.push({
@@ -540,8 +595,8 @@ function generateComprehensiveBoard(prdContent: any, settings: any) {
     style: {
       fontSize: 32,
       textColor: primaryColor,
-      textAlign: "center"
-    }
+      textAlign: "center",
+    },
   })
   elementsBreakdown.overview++
 
@@ -553,27 +608,30 @@ function generateComprehensiveBoard(prdContent: any, settings: any) {
     },
     position: { x: 700, y: 50 },
     style: {
-      fillColor: primaryColor + "20"
-    }
+      fillColor: primaryColor + "20",
+    },
   })
   elementsBreakdown.overview++
 
   // Section 1: User Personas (top-left)
-  const personaSection = generatePersonaMapping(prdContent, { ...settings, includePersonas: true })
+  const personaSection = generatePersonaMapping(prdContent, {
+    ...settings,
+    includePersonas: true,
+  })
   personaSection.items.forEach(item => {
     items.push({
       ...item,
-      position: { x: item.position.x + 50, y: item.position.y + 200 }
+      position: { x: item.position.x + 50, y: item.position.y + 200 },
     })
   })
   connectors.push(...personaSection.connectors)
 
-  // Section 2: User Journey (top-right)  
+  // Section 2: User Journey (top-right)
   const journeySection = generateUserJourney(prdContent, settings)
   journeySection.items.forEach(item => {
     items.push({
       ...item,
-      position: { x: item.position.x + 800, y: item.position.y + 200 }
+      position: { x: item.position.x + 800, y: item.position.y + 200 },
     })
   })
   connectors.push(...journeySection.connectors)
@@ -583,7 +641,7 @@ function generateComprehensiveBoard(prdContent: any, settings: any) {
   processSection.items.forEach(item => {
     items.push({
       ...item,
-      position: { x: item.position.x + 100, y: item.position.y + 800 }
+      position: { x: item.position.x + 100, y: item.position.y + 800 },
     })
   })
   connectors.push(...processSection.connectors)
@@ -600,8 +658,8 @@ function generateComprehensiveBoard(prdContent: any, settings: any) {
     style: {
       fillColor: colors.purple + "30",
       borderColor: colors.purple,
-      borderWidth: 2
-    }
+      borderWidth: 2,
+    },
   })
 
   items.push({
@@ -615,8 +673,8 @@ function generateComprehensiveBoard(prdContent: any, settings: any) {
     style: {
       fillColor: colors.blue + "30",
       borderColor: colors.blue,
-      borderWidth: 2
-    }
+      borderWidth: 2,
+    },
   })
 
   items.push({
@@ -630,19 +688,22 @@ function generateComprehensiveBoard(prdContent: any, settings: any) {
     style: {
       fillColor: colors.teal + "30",
       borderColor: colors.teal,
-      borderWidth: 2
-    }
+      borderWidth: 2,
+    },
   })
 
   // Merge element breakdowns
   Object.keys(personaSection.elementsBreakdown).forEach(key => {
-    elementsBreakdown[key] = (elementsBreakdown[key] || 0) + personaSection.elementsBreakdown[key]
+    elementsBreakdown[key] =
+      (elementsBreakdown[key] || 0) + personaSection.elementsBreakdown[key]
   })
   Object.keys(journeySection.elementsBreakdown).forEach(key => {
-    elementsBreakdown[key] = (elementsBreakdown[key] || 0) + journeySection.elementsBreakdown[key]
+    elementsBreakdown[key] =
+      (elementsBreakdown[key] || 0) + journeySection.elementsBreakdown[key]
   })
   Object.keys(processSection.elementsBreakdown).forEach(key => {
-    elementsBreakdown[key] = (elementsBreakdown[key] || 0) + processSection.elementsBreakdown[key]
+    elementsBreakdown[key] =
+      (elementsBreakdown[key] || 0) + processSection.elementsBreakdown[key]
   })
 
   return { items, connectors, elementsBreakdown }
@@ -660,15 +721,15 @@ function generateUserJourney(prdContent: any, settings: any) {
 
   const colors = {
     blue: "#1a73e8",
-    green: "#34a853", 
+    green: "#34a853",
     purple: "#9c27b0",
     orange: "#ff9800",
     red: "#f44336",
-    teal: "#00bcd4"
+    teal: "#00bcd4",
   }
 
   const colorScheme = settings.colorScheme || "blue"
-  const primaryColor = colors[colorScheme] || colors.blue
+  const primaryColor = colors[colorScheme as keyof typeof colors] || colors.blue
 
   // Title header as text element
   items.push({
@@ -681,8 +742,8 @@ function generateUserJourney(prdContent: any, settings: any) {
     style: {
       fontSize: 24,
       textColor: primaryColor,
-      textAlign: "center"
-    }
+      textAlign: "center",
+    },
   })
   elementsBreakdown.touchpoints++
 
@@ -691,20 +752,20 @@ function generateUserJourney(prdContent: any, settings: any) {
     prdContent.userPersonas.forEach((persona: any, index: number) => {
       const personaColors = [colors.blue, colors.green, colors.purple]
       const personaColor = personaColors[index % personaColors.length]
-      
+
       items.push({
         type: "card",
         title: `👤 ${persona.name}`,
         data: {
-          content: `${persona.role} - ${persona.demographics}\\nGoal: ${persona.goals[0] || 'Achieve success'}`,
+          content: `${persona.role} - ${persona.demographics}\\nGoal: ${persona.goals[0] || "Achieve success"}`,
         },
         position: {
-          x: 50 + (index * 200),
+          x: 50 + index * 200,
           y: 150,
         },
         style: {
-          fillColor: personaColor + "15"
-        }
+          fillColor: personaColor + "15",
+        },
       })
       elementsBreakdown.touchpoints++
     })
@@ -713,11 +774,11 @@ function generateUserJourney(prdContent: any, settings: any) {
   // Create journey stages as shapes with proper flow
   if (prdContent.userStories) {
     const stageEmojis = ["🚀", "⚡", "🎯", "✨", "🏆"]
-    
+
     prdContent.userStories.forEach((story: any, index: number) => {
       const stageColor = index % 2 === 0 ? primaryColor : colors.teal
       const emoji = stageEmojis[index % stageEmojis.length]
-      
+
       // Main journey stage as rectangle shape
       items.push({
         type: "shape",
@@ -726,7 +787,7 @@ function generateUserJourney(prdContent: any, settings: any) {
           content: `${emoji} STAGE ${index + 1}\\n${story.title}\\n${story.userAction}`,
         },
         position: {
-          x: 100 + (index * 300),
+          x: 100 + index * 300,
           y: 350,
         },
         geometry: {
@@ -736,41 +797,51 @@ function generateUserJourney(prdContent: any, settings: any) {
         style: {
           fillColor: stageColor + "20",
           borderColor: stageColor,
-          borderWidth: 3
-        }
+          borderWidth: 3,
+        },
       })
 
       // Emotion as sticky note
-      const emotions = ["😐 Neutral", "😊 Happy", "😃 Excited", "🤔 Thinking", "🎉 Celebrating"]
+      const emotions = [
+        "😐 Neutral",
+        "😊 Happy",
+        "😃 Excited",
+        "🤔 Thinking",
+        "🎉 Celebrating",
+      ]
       items.push({
         type: "sticky_note",
         data: {
           content: emotions[index % emotions.length],
         },
         position: {
-          x: 150 + (index * 300),
+          x: 150 + index * 300,
           y: 500,
         },
         style: {
-          fillColor: "#fff9c4"
-        }
+          fillColor: "#fff9c4",
+        },
       })
       elementsBreakdown.emotions++
 
       // Pain point as warning sticky note
-      if (index < 3 && story.acceptanceCriteria && story.acceptanceCriteria.length > 0) {
+      if (
+        index < 3 &&
+        story.acceptanceCriteria &&
+        story.acceptanceCriteria.length > 0
+      ) {
         items.push({
           type: "sticky_note",
           data: {
             content: `⚠️ Pain Point\\n${story.acceptanceCriteria[0]}`,
           },
           position: {
-            x: 100 + (index * 300),
+            x: 100 + index * 300,
             y: 550,
           },
           style: {
-            fillColor: "#ffcdd2"
-          }
+            fillColor: "#ffcdd2",
+          },
         })
         elementsBreakdown.painPoints++
       }
@@ -783,20 +854,22 @@ function generateUserJourney(prdContent: any, settings: any) {
       connectors.push({
         start: {
           item: `stage_${i}`,
-          snapTo: "right"
+          snapTo: "right",
         },
         end: {
           item: `stage_${i + 1}`,
-          snapTo: "left"
+          snapTo: "left",
         },
         style: {
           strokeColor: primaryColor,
-          strokeWidth: 3
+          strokeWidth: 3,
         },
-        captions: [{
-          content: "Next",
-          position: 0.5
-        }]
+        captions: [
+          {
+            content: "Next",
+            position: 0.5,
+          },
+        ],
       })
     }
   }
@@ -837,7 +910,7 @@ function generateUserFlow(prdContent: any, settings: any) {
           shape: "rectangle",
         },
         position: {
-          x: 300 + (index * 200),
+          x: 300 + index * 200,
           y: 200,
         },
         geometry: {
@@ -856,7 +929,7 @@ function generateUserFlow(prdContent: any, settings: any) {
             shape: "diamond",
           },
           position: {
-            x: 300 + (index * 200),
+            x: 300 + index * 200,
             y: 350,
           },
           geometry: {
@@ -884,15 +957,15 @@ function generateProcessDiagram(prdContent: any, settings: any) {
 
   const colors = {
     blue: "#1a73e8",
-    green: "#34a853", 
+    green: "#34a853",
     purple: "#9c27b0",
     orange: "#ff9800",
     red: "#f44336",
-    teal: "#00bcd4"
+    teal: "#00bcd4",
   }
 
   const colorScheme = settings.colorScheme || "blue"
-  const primaryColor = colors[colorScheme] || colors.blue
+  const primaryColor = colors[colorScheme as keyof typeof colors] || colors.blue
 
   // Section header as text
   items.push({
@@ -905,8 +978,8 @@ function generateProcessDiagram(prdContent: any, settings: any) {
     style: {
       fontSize: 24,
       textColor: colors.teal,
-      textAlign: "center"
-    }
+      textAlign: "center",
+    },
   })
   elementsBreakdown.processes++
 
@@ -922,18 +995,24 @@ function generateProcessDiagram(prdContent: any, settings: any) {
     style: {
       fillColor: colors.green + "30",
       borderColor: colors.green,
-      borderWidth: 3
-    }
+      borderWidth: 3,
+    },
   })
   elementsBreakdown.processes++
 
   // Generate workflow from features as process boxes
   prdContent.features.forEach((feature: any, index: number) => {
-    const featureColors = [colors.blue, colors.purple, colors.orange, colors.teal]
+    const featureColors = [
+      colors.blue,
+      colors.purple,
+      colors.orange,
+      colors.teal,
+    ]
     const featureColor = featureColors[index % featureColors.length]
     const priority = feature.priority || "medium"
-    const priorityEmoji = priority === "high" ? "🔥" : priority === "medium" ? "⭐" : "📋"
-    
+    const priorityEmoji =
+      priority === "high" ? "🔥" : priority === "medium" ? "⭐" : "📋"
+
     // Main process box as rectangle
     items.push({
       type: "shape",
@@ -942,7 +1021,7 @@ function generateProcessDiagram(prdContent: any, settings: any) {
         content: `${priorityEmoji} ${feature.name}\\n${feature.description}\\n[${priority.toUpperCase()} PRIORITY]`,
       },
       position: {
-        x: 250 + (index * 300),
+        x: 250 + index * 300,
         y: 150,
       },
       geometry: {
@@ -952,8 +1031,8 @@ function generateProcessDiagram(prdContent: any, settings: any) {
       style: {
         fillColor: featureColor + "20",
         borderColor: featureColor,
-        borderWidth: 3
-      }
+        borderWidth: 3,
+      },
     })
     elementsBreakdown.processes++
 
@@ -966,7 +1045,7 @@ function generateProcessDiagram(prdContent: any, settings: any) {
           content: `Complete?`,
         },
         position: {
-          x: 270 + (index * 300),
+          x: 270 + index * 300,
           y: 300,
         },
         geometry: {
@@ -976,63 +1055,65 @@ function generateProcessDiagram(prdContent: any, settings: any) {
         style: {
           fillColor: colors.orange + "20",
           borderColor: colors.orange,
-          borderWidth: 2
-        }
+          borderWidth: 2,
+        },
       })
       elementsBreakdown.decisions++
     }
 
     // Acceptance criteria as sticky notes
-    feature.acceptanceCriteria.slice(0, 3).forEach((criteria: string, subIndex: number) => {
-      items.push({
-        type: "sticky_note",
-        data: {
-          content: `✓ ${criteria}`,
-        },
-        position: {
-          x: 180 + (index * 300) + (subIndex * 80),
-          y: 400,
-        },
-        style: {
-          fillColor: featureColor + "40"
-        }
+    feature.acceptanceCriteria
+      .slice(0, 3)
+      .forEach((criteria: string, subIndex: number) => {
+        items.push({
+          type: "sticky_note",
+          data: {
+            content: `✓ ${criteria}`,
+          },
+          position: {
+            x: 180 + index * 300 + subIndex * 80,
+            y: 400,
+          },
+          style: {
+            fillColor: featureColor + "40",
+          },
+        })
       })
-    })
 
     // Create connector from previous step
     if (index === 0) {
       // Connect from START
       connectors.push({
         start: {
-          position: { x: 200, y: 200 }
+          position: { x: 200, y: 200 },
         },
         end: {
-          position: { x: 250 + (index * 300), y: 210 }
+          position: { x: 250 + index * 300, y: 210 },
         },
         style: {
           strokeColor: primaryColor,
-          strokeWidth: 3
-        }
+          strokeWidth: 3,
+        },
       })
     } else {
       // Connect from previous feature
       connectors.push({
         start: {
-          position: { x: 250 + ((index - 1) * 300) + 200, y: 210 }
+          position: { x: 250 + (index - 1) * 300 + 200, y: 210 },
         },
         end: {
-          position: { x: 250 + (index * 300), y: 210 }
+          position: { x: 250 + index * 300, y: 210 },
         },
         style: {
           strokeColor: primaryColor,
-          strokeWidth: 3
-        }
+          strokeWidth: 3,
+        },
       })
     }
   })
 
   // End node as circle
-  const lastFeatureX = 250 + (prdContent.features.length * 300)
+  const lastFeatureX = 250 + prdContent.features.length * 300
   items.push({
     type: "shape",
     shape: "circle",
@@ -1044,8 +1125,8 @@ function generateProcessDiagram(prdContent: any, settings: any) {
     style: {
       fillColor: colors.red + "30",
       borderColor: colors.red,
-      borderWidth: 3
-    }
+      borderWidth: 3,
+    },
   })
   elementsBreakdown.endpoints++
 
@@ -1053,15 +1134,18 @@ function generateProcessDiagram(prdContent: any, settings: any) {
   if (prdContent.features.length > 0) {
     connectors.push({
       start: {
-        position: { x: 250 + ((prdContent.features.length - 1) * 300) + 200, y: 210 }
+        position: {
+          x: 250 + (prdContent.features.length - 1) * 300 + 200,
+          y: 210,
+        },
       },
       end: {
-        position: { x: lastFeatureX, y: 200 }
+        position: { x: lastFeatureX, y: 200 },
       },
       style: {
         strokeColor: primaryColor,
-        strokeWidth: 3
-      }
+        strokeWidth: 3,
+      },
     })
   }
 
@@ -1084,17 +1168,17 @@ function generatePersonaMapping(prdContent: any, settings: any) {
 
   const colors = {
     blue: "#1a73e8",
-    green: "#34a853", 
+    green: "#34a853",
     purple: "#9c27b0",
     orange: "#ff9800",
     red: "#f44336",
     teal: "#00bcd4",
     indigo: "#3f51b5",
-    rose: "#e91e63"
+    rose: "#e91e63",
   }
 
   const colorScheme = settings.colorScheme || "blue"
-  const primaryColor = colors[colorScheme] || colors.blue
+  const primaryColor = colors[colorScheme as keyof typeof colors] || colors.blue
 
   // Section header
   items.push({
@@ -1125,14 +1209,20 @@ function generatePersonaMapping(prdContent: any, settings: any) {
     geometry: { width: 400, height: 100 },
     style: {
       fillColor: "transparent",
-      borderColor: "transparent"
-    }
+      borderColor: "transparent",
+    },
   })
   elementsBreakdown.personas++
 
   if (prdContent.userPersonas) {
     prdContent.userPersonas.forEach((persona: any, index: number) => {
-      const personaColors = [colors.blue, colors.green, colors.purple, colors.orange, colors.teal]
+      const personaColors = [
+        colors.blue,
+        colors.green,
+        colors.purple,
+        colors.orange,
+        colors.teal,
+      ]
       const personaColor = personaColors[index % personaColors.length]
       const avatarEmojis = ["👨‍💼", "👩‍💻", "👨‍🎓", "👩‍🎨", "👨‍🔬", "👩‍⚕️"]
       const avatar = avatarEmojis[index % avatarEmojis.length]
@@ -1142,15 +1232,15 @@ function generatePersonaMapping(prdContent: any, settings: any) {
         type: "card",
         title: `${avatar} ${persona.name}`,
         data: {
-          content: `${persona.role}\\n${persona.demographics}\\nTop Goal: ${persona.goals[0] || 'Achieve success'}`,
+          content: `${persona.role}\\n${persona.demographics}\\nTop Goal: ${persona.goals[0] || "Achieve success"}`,
         },
         position: {
-          x: 50 + (index * 350),
+          x: 50 + index * 350,
           y: 50,
         },
         style: {
-          fillColor: personaColor + "20"
-        }
+          fillColor: personaColor + "20",
+        },
       })
       elementsBreakdown.personas++
 
@@ -1163,12 +1253,12 @@ function generatePersonaMapping(prdContent: any, settings: any) {
               content: `💭 Need: ${need}`,
             },
             position: {
-              x: 50 + (index * 350),
-              y: 330 + (needIndex * 85),
+              x: 50 + index * 350,
+              y: 330 + needIndex * 85,
             },
             style: {
-              fillColor: "light_green"
-            }
+              fillColor: "light_green",
+            },
           })
           elementsBreakdown.needs++
         })
@@ -1176,22 +1266,24 @@ function generatePersonaMapping(prdContent: any, settings: any) {
 
       // Pain points as sticky notes
       if (persona.painPoints && persona.painPoints.length > 0) {
-        persona.painPoints.slice(0, 2).forEach((pain: string, painIndex: number) => {
-          items.push({
-            type: "sticky_note",
-            data: {
-              content: `⚠️ Pain: ${pain}`,
-            },
-            position: {
-              x: 170 + (index * 350),
-              y: 330 + (painIndex * 85),
-            },
-            style: {
-              fillColor: "red"
-            }
+        persona.painPoints
+          .slice(0, 2)
+          .forEach((pain: string, painIndex: number) => {
+            items.push({
+              type: "sticky_note",
+              data: {
+                content: `⚠️ Pain: ${pain}`,
+              },
+              position: {
+                x: 170 + index * 350,
+                y: 330 + painIndex * 85,
+              },
+              style: {
+                fillColor: "red",
+              },
+            })
+            elementsBreakdown.painPoints++
           })
-          elementsBreakdown.painPoints++
-        })
       }
     })
   }
@@ -1199,13 +1291,21 @@ function generatePersonaMapping(prdContent: any, settings: any) {
   return { items, connectors, elementsBreakdown }
 }
 
+function generateProcessWorkflow(prdContent: any, settings: any) {
+  return generateProcessDiagram(prdContent, settings) // Process workflow uses same logic as process diagram
+}
+
 function generateFeatureFlowchart(prdContent: any, settings: any) {
   return generateProcessDiagram(prdContent, settings) // Default to process diagram
 }
 
-function generateRecommendations(designType: string, prdContent: any, itemsCount: number): string[] {
+function generateRecommendations(
+  designType: string,
+  prdContent: any,
+  itemsCount: number
+): string[] {
   const recommendations = [
-    `Generated ${itemsCount} visual elements for comprehensive ${designType.replace('_', ' ')}`,
+    `Generated ${itemsCount} visual elements for comprehensive ${designType.replace("_", " ")}`,
     "Share the Miro board with stakeholders for collaborative feedback",
     "Use the board as a reference during development planning",
   ]
@@ -1236,7 +1336,7 @@ function generateRecommendations(designType: string, prdContent: any, itemsCount
 
 function generateNextSteps(designType: string, boardLink: string): string[] {
   return [
-    `Review the generated ${designType.replace('_', ' ')} in Miro`,
+    `Review the generated ${designType.replace("_", " ")} in Miro`,
     "Gather feedback from stakeholders and team members",
     "Iterate on the design based on feedback",
     "Use the visual guide for development planning",
@@ -1256,7 +1356,11 @@ export async function testVisualDesignTool() {
         {
           name: "Task Creation",
           description: "Users can create and organize tasks",
-          acceptanceCriteria: ["Create task form", "Task categorization", "Due date setting"],
+          acceptanceCriteria: [
+            "Create task form",
+            "Task categorization",
+            "Due date setting",
+          ],
           priority: "high" as const,
         },
       ],
@@ -1287,7 +1391,7 @@ export async function testVisualDesignTool() {
   try {
     const result = await visualDesignTool.execute({
       context: testInput,
-      runtimeContext: {},
+      runtimeContext: undefined as any,
     })
 
     console.log("✅ Visual Design Tool test passed!")

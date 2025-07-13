@@ -27,6 +27,7 @@ interface Message {
 interface ChatInterfaceProps {
   onAgentCall?: (agentType: AgentType, message: string) => void
   onWorkflowRun?: (initialIdea: string) => void
+  onSequentialWorkflow?: (initialIdea: string) => void
   conversation?: {
     messages: Message[]
     addUserMessage: (content: string) => Message
@@ -47,6 +48,7 @@ interface ChatInterfaceProps {
 export function ChatInterface({
   onAgentCall,
   onWorkflowRun,
+  onSequentialWorkflow,
   conversation,
   isLoading = false,
   currentAgent,
@@ -242,6 +244,20 @@ export function ChatInterface({
                   style={{ animationDelay: "0.3s" }}
                 />
                 <span className="text-xs">Full Workflow</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  onSequentialWorkflow?.("Run sequential agent workflow")
+                }
+                className="h-auto p-3 flex flex-col items-center gap-2 btn-hover  loading-pulse"
+              >
+                <Zap
+                  className="w-4 h-4 "
+                  style={{ animationDelay: "0.4s" }}
+                />
+                <span className="text-xs">Sequential</span>
               </Button>
             </div>
           </div>

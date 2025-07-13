@@ -1,7 +1,7 @@
 // src/mastra/tools/sprintPlannerTool.ts - Sprint Planning Tool with Linear Integration
 import { createTool } from "@mastra/core/tools"
 import { z } from "zod"
-import { SprintSchema } from "../../types.ts/productMaestro.js"
+import { SprintSchema } from "../../types/productMaestro.js"
 
 // Linear API integration schemas
 const LinearTeamSchema = z.object({
@@ -272,10 +272,10 @@ export const sprintPlannerTool = createTool({
         sprintLength === "1 week"
           ? 0.5
           : sprintLength === "3 weeks"
-          ? 1.5
-          : sprintLength === "4 weeks"
-          ? 2
-          : 1
+            ? 1.5
+            : sprintLength === "4 weeks"
+              ? 2
+              : 1
       const sprintVelocity = Math.round(baseVelocity * sprintDurationMultiplier)
 
       // Sort user stories by priority and story points for optimal sprint planning
@@ -314,9 +314,7 @@ export const sprintPlannerTool = createTool({
 
           return {
             title: `Implement: ${story.title}`,
-            description: `${story.userAction} - ${
-              story.benefit
-            }\n\nAcceptance Criteria:\n${story.acceptanceCriteria.join("\n")}`,
+            description: `${story.userAction} - ${story.benefit}\n\nAcceptance Criteria:\n${story.acceptanceCriteria.join("\n")}`,
             estimatedHours,
             assignee: `Developer ${(index % teamSize) + 1}`,
             dependencies:
@@ -344,8 +342,8 @@ export const sprintPlannerTool = createTool({
             sprintNum === 1
               ? `Establish core foundation and implement critical user flows`
               : sprintNum === 2
-              ? `Build primary features and user experience`
-              : `Polish, optimize, and prepare for launch`,
+                ? `Build primary features and user experience`
+                : `Polish, optimize, and prepare for launch`,
           duration: sprintLength,
           userStories: sprintUserStories,
           tasks: sprintTasks,
@@ -357,16 +355,16 @@ export const sprintPlannerTool = createTool({
                   "Database setup",
                 ]
               : sprintNum === 2
-              ? [
-                  "Primary feature implementation",
-                  "User workflow completion",
-                  "Basic testing",
-                ]
-              : [
-                  "Performance optimization",
-                  "Bug fixes",
-                  "Production deployment",
-                ],
+                ? [
+                    "Primary feature implementation",
+                    "User workflow completion",
+                    "Basic testing",
+                  ]
+                : [
+                    "Performance optimization",
+                    "Bug fixes",
+                    "Production deployment",
+                  ],
           risks:
             sprintNum === 1
               ? ["Technology setup delays", "Team onboarding time"]
@@ -450,9 +448,7 @@ export const sprintPlannerTool = createTool({
 
             const cycle = await linearClient.createCycle({
               name: `${productTitle} - Sprint ${sprint.sprintNumber}`,
-              description: `${
-                sprint.goal
-              }\n\nDeliverables: ${sprint.deliverables.join(", ")}`,
+              description: `${sprint.goal}\n\nDeliverables: ${sprint.deliverables.join(", ")}`,
               teamId: linearTeamId,
               startsAt: startDate.toISOString(),
               endsAt: endDate.toISOString(),
@@ -484,9 +480,7 @@ export const sprintPlannerTool = createTool({
             }
           }
         } catch (error) {
-          linearIntegration.errors.push(
-            `Linear integration failed: ${error.message}`
-          )
+          linearIntegration.errors.push(`Linear integration failed: ${error}`)
         }
       } else if (createLinearProject) {
         linearIntegration.errors.push(
@@ -498,9 +492,7 @@ export const sprintPlannerTool = createTool({
         sprints,
         summary: {
           totalStoryPoints,
-          estimatedDuration: `${sprints.length} sprints (${
-            sprints.length * (sprintLength === "1 week" ? 1 : 2)
-          } weeks)`,
+          estimatedDuration: `${sprints.length} sprints (${sprints.length * (sprintLength === "1 week" ? 1 : 2)} weeks)`,
           sprintVelocity,
           riskFactors,
           recommendations,
@@ -508,7 +500,7 @@ export const sprintPlannerTool = createTool({
         linearIntegration,
       }
     } catch (error) {
-      throw new Error(`Sprint planning failed: ${error.message}`)
+      throw new Error(`Sprint planning failed: ${error}`)
     }
   },
 })
@@ -580,7 +572,7 @@ export async function testSprintPlannerTool() {
   try {
     const result = await sprintPlannerTool.execute({
       context: testInput,
-      runtimeContext: {},
+      runtimeContext: undefined as any,
     })
 
     console.log("✅ Sprint Planner Tool test passed!")
@@ -590,10 +582,7 @@ export async function testSprintPlannerTool() {
     )
     console.log(`⏱️  Estimated duration: ${result.summary.estimatedDuration}`)
     console.log(
-      `📝 Total tasks: ${result.sprints.reduce(
-        (sum, s) => sum + s.tasks.length,
-        0
-      )}`
+      `📝 Total tasks: ${result.sprints.reduce((sum, s) => sum + s.tasks.length, 0)}`
     )
 
     return result

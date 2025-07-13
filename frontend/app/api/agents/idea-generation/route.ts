@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+import { mastraClient } from '@/lib/mastra-client';
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -9,7 +8,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { message, context, sessionId } = body;
 
-    if (!message) {
+    if (!message?.trim()) {
       return NextResponse.json(
         { 
           success: false,
@@ -24,37 +23,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For now, we'll call the agent directly until backend API is ready
-    // TODO: Replace with actual backend API call when available
-    
-    // Simulate backend response structure
-    const mockResponse = {
-      refinedIdea: `Refined product idea: ${message}`,
-      features: [
-        'Core functionality based on user needs',
-        'User-friendly interface design',
-        'Scalable architecture',
-        'Mobile responsiveness'
-      ],
-      targetAudience: 'Primary target users who need this solution',
-      problemStatement: `The main problem this product solves: ${message}`,
-      successCriteria: [
-        'User adoption rate > 70%',
-        'Customer satisfaction score > 4.5/5',
-        'Reduced time to complete core tasks'
-      ]
-    };
+    // Call the actual Mastra server
+    const result = await mastraClient.agents.ideaGeneration(
+      message,
+      context ? JSON.stringify(context) : undefined
+    );
 
     const processingTime = Date.now() - startTime;
 
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: result.error || 'Failed to process idea generation',
+          metadata: {
+            agentType: 'idea-generation',
+            processingTime,
+            confidence: 0,
+          },
+        },
+        { status: 500 }
+      );
+    }
+
+    // Format the response for frontend consumption
+    const responseData = {
+      refinedIdea: result.data?.text || 'Idea refinement completed',
+      features: [], // Will be extracted from structured response
+      targetAudience: 'Target audience analysis completed',
+      problemStatement: 'Problem statement refined', 
+      successCriteria: [], // Will be extracted from structured response
+      rawResponse: result.data?.text || '', // Include full response
+    };
+
     return NextResponse.json({
       success: true,
-      data: mockResponse,
+      data: responseData,
       metadata: {
         agentType: 'idea-generation',
-        processingTime,
-        confidence: 0.92,
+        processingTime: result.metadata?.processingTime || processingTime,
+        confidence: 0.92, // Could be extracted from agent response
         sessionId: sessionId || `session-${Date.now()}`,
+        usage: result.metadata?.usage,
+        toolCalls: result.metadata?.toolCalls,
       },
     });
 

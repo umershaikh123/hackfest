@@ -12,7 +12,7 @@ export class MiroWebSDKClient {
 
   constructor() {
     // This will be available when running in a Miro app context
-    if (typeof window !== 'undefined' && (window as any).miro) {
+    if (typeof window !== "undefined" && (window as any).miro) {
       this.miro = (window as any).miro
       this.board = this.miro.board
     }
@@ -30,27 +30,27 @@ export class MiroWebSDKClient {
     y: number
     style?: {
       fillColor?: string
-      textAlign?: 'left' | 'center' | 'right'
-      textAlignVertical?: 'top' | 'middle' | 'bottom'
+      textAlign?: "left" | "center" | "right"
+      textAlignVertical?: "top" | "middle" | "bottom"
     }
-    shape?: 'square' | 'rectangle'
+    shape?: "square" | "rectangle"
     width?: number
   }) {
     if (!this.isAvailable()) {
-      throw new Error('Miro Web SDK not available - use REST API fallback')
+      throw new Error("Miro Web SDK not available - use REST API fallback")
     }
 
     return await this.board.createStickyNote({
       content: `<p>${options.content}</p>`,
       style: {
-        fillColor: options.style?.fillColor || 'light_yellow',
-        textAlign: options.style?.textAlign || 'center',
-        textAlignVertical: options.style?.textAlignVertical || 'middle'
+        fillColor: options.style?.fillColor || "light_yellow",
+        textAlign: options.style?.textAlign || "center",
+        textAlignVertical: options.style?.textAlignVertical || "middle",
       },
       x: options.x,
       y: options.y,
-      shape: options.shape || 'square',
-      width: options.width || 200
+      shape: options.shape || "square",
+      width: options.width || 200,
     })
   }
 
@@ -61,7 +61,7 @@ export class MiroWebSDKClient {
     y: number
     width?: number
     height?: number
-    shape?: 'rectangle' | 'circle' | 'triangle' | 'star' | 'rhombus'
+    shape?: "rectangle" | "circle" | "triangle" | "star" | "rhombus"
     style?: {
       fillColor?: string
       color?: string
@@ -70,22 +70,22 @@ export class MiroWebSDKClient {
     }
   }) {
     if (!this.isAvailable()) {
-      throw new Error('Miro Web SDK not available - use REST API fallback')
+      throw new Error("Miro Web SDK not available - use REST API fallback")
     }
 
     return await this.board.createShape({
       content: `<p>${options.content}</p>`,
-      shape: options.shape || 'rectangle',
+      shape: options.shape || "rectangle",
       style: {
-        color: options.style?.color || '#1a1a1a',
-        fillColor: options.style?.fillColor || '#ffffff',
-        fontFamily: options.style?.fontFamily || 'arial',
-        fontSize: options.style?.fontSize || 14
+        color: options.style?.color || "#1a1a1a",
+        fillColor: options.style?.fillColor || "#ffffff",
+        fontFamily: options.style?.fontFamily || "arial",
+        fontSize: options.style?.fontSize || 14,
       },
       x: options.x,
       y: options.y,
       width: options.width || 200,
-      height: options.height || 100
+      height: options.height || 100,
     })
   }
 
@@ -99,26 +99,26 @@ export class MiroWebSDKClient {
       color?: string
       fontFamily?: string
       fontSize?: number
-      textAlign?: 'left' | 'center' | 'right'
+      textAlign?: "left" | "center" | "right"
     }
     rotation?: number
   }) {
     if (!this.isAvailable()) {
-      throw new Error('Miro Web SDK not available - use REST API fallback')
+      throw new Error("Miro Web SDK not available - use REST API fallback")
     }
 
     return await this.board.createText({
       content: `<p>${options.content}</p>`,
       style: {
-        color: options.style?.color || '#1a1a1a',
-        fontFamily: options.style?.fontFamily || 'arial',
+        color: options.style?.color || "#1a1a1a",
+        fontFamily: options.style?.fontFamily || "arial",
         fontSize: options.style?.fontSize || 14,
-        textAlign: options.style?.textAlign || 'left'
+        textAlign: options.style?.textAlign || "left",
       },
       x: options.x,
       y: options.y,
       width: options.width || 300,
-      rotation: options.rotation || 0.0
+      rotation: options.rotation || 0.0,
     })
   }
 
@@ -126,36 +126,36 @@ export class MiroWebSDKClient {
   async createConnector(options: {
     startItemId: string
     endItemId: string
-    shape?: 'straight' | 'elbowed' | 'curved'
+    shape?: "straight" | "elbowed" | "curved"
     style?: {
       strokeColor?: string
       strokeWidth?: number
-      strokeStyle?: 'normal' | 'dashed' | 'dotted'
-      startStrokeCap?: 'none' | 'stealth' | 'diamond' | 'oval'
-      endStrokeCap?: 'none' | 'stealth' | 'diamond' | 'oval'
+      strokeStyle?: "normal" | "dashed" | "dotted"
+      startStrokeCap?: "none" | "stealth" | "diamond" | "oval"
+      endStrokeCap?: "none" | "stealth" | "diamond" | "oval"
     }
   }) {
     if (!this.isAvailable()) {
-      throw new Error('Miro Web SDK not available - use REST API fallback')
+      throw new Error("Miro Web SDK not available - use REST API fallback")
     }
 
     return await this.board.createConnector({
       start: {
         item: options.startItemId,
-        position: { x: 1.0, y: 0.5 }
+        position: { x: 1.0, y: 0.5 },
       },
       end: {
         item: options.endItemId,
-        snapTo: 'auto'
+        snapTo: "auto",
       },
-      shape: options.shape || 'elbowed',
+      shape: options.shape || "elbowed",
       style: {
-        startStrokeCap: options.style?.startStrokeCap || 'none',
-        endStrokeCap: options.style?.endStrokeCap || 'stealth',
-        strokeStyle: options.style?.strokeStyle || 'normal',
-        strokeColor: options.style?.strokeColor || '#1a73e8',
-        strokeWidth: options.style?.strokeWidth || 2
-      }
+        startStrokeCap: options.style?.startStrokeCap || "none",
+        endStrokeCap: options.style?.endStrokeCap || "stealth",
+        strokeStyle: options.style?.strokeStyle || "normal",
+        strokeColor: options.style?.strokeColor || "#1a73e8",
+        strokeWidth: options.style?.strokeWidth || 2,
+      },
     })
   }
 
@@ -170,45 +170,47 @@ export class MiroWebSDKClient {
     }
   }) {
     if (!this.isAvailable()) {
-      throw new Error('Miro Web SDK not available - use REST API fallback')
+      throw new Error("Miro Web SDK not available - use REST API fallback")
     }
 
     return await this.board.createCard({
       title: options.title,
-      description: options.description || '',
+      description: options.description || "",
       x: options.x,
       y: options.y,
       style: {
-        fillColor: options.style?.fillColor || 'light_yellow'
-      }
+        fillColor: options.style?.fillColor || "light_yellow",
+      },
     })
   }
 
   // Batch create multiple items efficiently
-  async createBatch(items: Array<{
-    type: 'sticky_note' | 'shape' | 'text' | 'card'
-    options: any
-  }>) {
+  async createBatch(
+    items: Array<{
+      type: "sticky_note" | "shape" | "text" | "card"
+      options: any
+    }>
+  ) {
     if (!this.isAvailable()) {
-      throw new Error('Miro Web SDK not available - use REST API fallback')
+      throw new Error("Miro Web SDK not available - use REST API fallback")
     }
 
     const results = []
-    
+
     for (const item of items) {
       try {
         let result
         switch (item.type) {
-          case 'sticky_note':
+          case "sticky_note":
             result = await this.createStickyNote(item.options)
             break
-          case 'shape':
+          case "shape":
             result = await this.createShape(item.options)
             break
-          case 'text':
+          case "text":
             result = await this.createText(item.options)
             break
-          case 'card':
+          case "card":
             result = await this.createCard(item.options)
             break
           default:
@@ -218,17 +220,17 @@ export class MiroWebSDKClient {
         results.push(result)
         console.log(`✅ Created ${item.type} with Web SDK`)
       } catch (error) {
-        console.warn(`⚠️ Failed to create ${item.type} with Web SDK:`, error.message)
+        console.warn(`⚠️ Failed to create ${item.type} with Web SDK:`, error)
       }
     }
-    
+
     return results
   }
 
   // Get board info
   async getBoardInfo() {
     if (!this.isAvailable()) {
-      throw new Error('Miro Web SDK not available')
+      throw new Error("Miro Web SDK not available")
     }
 
     return await this.board.getInfo()
@@ -243,7 +245,7 @@ export class MiroWebSDKClient {
     try {
       await this.miro.board.viewport.zoomTo(items)
     } catch (error) {
-      console.warn('Could not center viewport:', error.message)
+      console.warn("Could not center viewport:", error)
     }
   }
 }

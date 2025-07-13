@@ -8,11 +8,7 @@ import { notionTool } from "../tools/notionTool"
 import { ragKnowledgeTool } from "../tools/ragKnowledgeTool"
 import { memory } from "./ideaGenerationAgent" // Reuse the same memory store
 import { z } from "zod"
-import {
-  ProductIdeaSchema,
-  UserPersonaSchema,
-  UserStorySchema,
-} from "../../types.ts/productMaestro"
+import { ProductIdeaSchema, UserPersonaSchema, UserStorySchema } from "../../types/productMaestro"
 
 // Input schema for the PRD Agent
 const PRDAgentInputSchema = z.object({
@@ -20,10 +16,7 @@ const PRDAgentInputSchema = z.object({
   userPersonas: z.array(UserPersonaSchema),
   userStories: z.array(UserStorySchema),
   additionalContext: z.string().optional(),
-  databaseId: z
-    .string()
-    .optional()
-    .describe("Notion database ID - will use env var if not provided"),
+  databaseId: z.string().optional().describe("Notion database ID - will use env var if not provided"),
 })
 
 // Output schema for the PRD Agent
@@ -37,8 +30,7 @@ const PRDAgentOutputSchema = z.object({
 
 export const prdAgent = new Agent({
   name: "PRD Compiler",
-  description:
-    "The PRD Compiler - Expert at gathering all product information and creating comprehensive Product Requirements Documents published to Notion",
+  description: "The PRD Compiler - Expert at gathering all product information and creating comprehensive Product Requirements Documents published to Notion",
   instructions: `
     You are "The PRD Compiler" - a senior Product Manager and Technical Writer with 12+ years of experience creating world-class Product Requirements Documents for Fortune 500 companies and successful startups.
 
@@ -99,19 +91,16 @@ export const prdAgent = new Agent({
 })
 
 // Main function to execute PRD generation and publishing
-export async function generateAndPublishPRD(
-  input: z.infer<typeof PRDAgentInputSchema>
-) {
+export async function generateAndPublishPRD(input: z.infer<typeof PRDAgentInputSchema>) {
   try {
     console.log(`🔄 Starting PRD generation for: ${input.productIdea.title}`)
-
+    
     const databaseId = input.databaseId || process.env.NOTION_PRD_DATABASE_ID
-
+    
     if (!databaseId) {
       return {
         success: false,
-        message:
-          "Notion database ID not provided. Please set NOTION_PRD_DATABASE_ID environment variable or provide databaseId in input.",
+        message: "Notion database ID not provided. Please set NOTION_PRD_DATABASE_ID environment variable or provide databaseId in input.",
       }
     }
 
@@ -134,25 +123,20 @@ export async function generateAndPublishPRD(
       Please ensure the PRD follows industry standards and is ready for stakeholder review.
     `
 
-    const response = await prdAgent.generate(
-      [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
+    const response = await prdAgent.generate([
       {
-        maxSteps: 10, // Allow multiple tool uses
-      }
-    )
+        role: "user",
+        content: prompt,
+      },
+    ], {
+      maxSteps: 10, // Allow multiple tool uses
+    })
 
     console.log("🤖 PRD Agent Response:", response.text)
 
     // Extract information from the agent's response
     // This is a simplified extraction - in practice, you might want more sophisticated parsing
-    const notionUrlMatch = response.text.match(
-      /https:\/\/notion\.so\/[a-zA-Z0-9]+/
-    )
+    const notionUrlMatch = response.text.match(/https:\/\/notion\.so\/[a-zA-Z0-9]+/)
     const successMatch = response.text.toLowerCase().includes("success")
 
     return {
@@ -165,9 +149,7 @@ export async function generateAndPublishPRD(
     console.error("❌ PRD Agent Error:", error)
     return {
       success: false,
-      message: `Failed to generate PRD: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`,
+      message: `Failed to generate PRD: ${error instanceof Error ? error.message : "Unknown error"}`,
     }
   }
 }
@@ -179,60 +161,37 @@ export async function testPRDAgent() {
   const sampleInput = {
     productIdea: {
       title: "TaskMaster Pro",
-      description:
-        "An AI-powered project management tool that automatically prioritizes tasks based on deadlines, dependencies, and team capacity",
-      problemStatement:
-        "Teams struggle with task prioritization and often miss deadlines due to poor project visibility",
-      targetAudience:
-        "Small to medium-sized software development teams (5-50 people)",
+      description: "An AI-powered project management tool that automatically prioritizes tasks based on deadlines, dependencies, and team capacity",
+      problemStatement: "Teams struggle with task prioritization and often miss deadlines due to poor project visibility",
+      targetAudience: "Small to medium-sized software development teams (5-50 people)",
       coreFeatures: [
         "AI-powered task prioritization",
         "Real-time project dashboards",
         "Automated deadline tracking",
         "Team capacity planning",
         "Integration with popular dev tools",
-        "Smart notification system",
+        "Smart notification system"
       ],
       businessModel: "SaaS subscription with tiered pricing",
-      marketCategory: "Project Management & Productivity",
+      marketCategory: "Project Management & Productivity"
     },
     userPersonas: [
       {
         name: "Development Team Lead",
         role: "Primary User",
         demographics: "30-45 year old team lead with 5+ years experience",
-        needs: [
-          "Clear project visibility",
-          "Effective team coordination",
-          "Deadline management",
-        ],
-        painPoints: [
-          "Manual task prioritization",
-          "Poor deadline visibility",
-          "Team overcommitment",
-        ],
-        goals: [
-          "Deliver projects on time",
-          "Optimize team productivity",
-          "Reduce project stress",
-        ],
+        needs: ["Clear project visibility", "Effective team coordination", "Deadline management"],
+        painPoints: ["Manual task prioritization", "Poor deadline visibility", "Team overcommitment"],
+        goals: ["Deliver projects on time", "Optimize team productivity", "Reduce project stress"]
       },
       {
         name: "Software Developer",
-        role: "Secondary User",
+        role: "Secondary User", 
         demographics: "25-40 year old individual contributor",
-        needs: [
-          "Clear task priorities",
-          "Realistic deadlines",
-          "Minimal context switching",
-        ],
-        painPoints: [
-          "Unclear priorities",
-          "Constantly changing deadlines",
-          "Too many interruptions",
-        ],
-        goals: ["Focus on coding", "Meet commitments", "Career growth"],
-      },
+        needs: ["Clear task priorities", "Realistic deadlines", "Minimal context switching"],
+        painPoints: ["Unclear priorities", "Constantly changing deadlines", "Too many interruptions"],
+        goals: ["Focus on coding", "Meet commitments", "Career growth"]
+      }
     ],
     userStories: [
       {
@@ -240,28 +199,26 @@ export async function testPRDAgent() {
         title: "View AI-Generated Task Priorities",
         persona: "Development Team Lead",
         userAction: "I want to see AI-generated task priorities for my team",
-        benefit:
-          "so that I can make informed decisions about what to work on next",
+        benefit: "so that I can make informed decisions about what to work on next",
         acceptanceCriteria: [
           "Dashboard shows tasks ranked by AI priority score",
           "Priority reasoning is displayed for each task",
           "Priorities update automatically as conditions change",
-          "User can manually override AI recommendations",
+          "User can manually override AI recommendations"
         ],
         priority: "high" as const,
-        storyPoints: 8,
-      },
+        storyPoints: 8
+      }
     ],
-    additionalContext:
-      "This product should integrate seamlessly with existing development workflows and tools like GitHub, Jira, and Slack.",
+    additionalContext: "This product should integrate seamlessly with existing development workflows and tools like GitHub, Jira, and Slack."
   }
 
   const result = await generateAndPublishPRD(sampleInput)
-
+  
   console.log("🔍 PRD Agent Test Result:")
   console.log("✅ Success:", result.success)
   console.log("📄 Message:", result.message)
   console.log("🔗 Notion URL:", result.notionPageUrl)
-
+  
   return result
 }

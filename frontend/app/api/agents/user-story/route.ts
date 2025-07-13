@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+import { mastraAgents } from '@/lib/mastra-client';
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -9,7 +8,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { message, context, sessionId } = body;
 
-    if (!message) {
+    if (!message?.trim()) {
       return NextResponse.json(
         { 
           success: false,
@@ -24,91 +23,64 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Mock response for user story generation
-    const mockResponse = {
-      userStories: [
+    // Use the Mastra client to call the backend user story agent
+    const result = await mastraAgents.userStoryGeneration(
+      { title: "Product", description: message }, // productIdea
+      [], // userPersonas
+      [] // conversationHistory
+    );
+
+    if (!result.success) {
+      return NextResponse.json(
         {
-          id: 'us-1',
-          title: 'User Registration',
-          description: 'As a new user, I want to create an account so that I can access personalized features',
-          acceptanceCriteria: [
-            'User can enter email and password',
-            'System validates email format',
-            'User receives confirmation email',
-            'Account is created successfully'
-          ],
-          priority: 'high' as const,
-          storyPoints: 5
+          success: false,
+          error: result.error || 'User story generation failed',
+          metadata: {
+            agentType: 'user-story',
+            processingTime: result.metadata?.processingTime || 0,
+            confidence: 0,
+          }
         },
-        {
-          id: 'us-2',
-          title: 'Dashboard View',
-          description: 'As a logged-in user, I want to see a dashboard so that I can quickly access key features',
-          acceptanceCriteria: [
-            'Dashboard shows user statistics',
-            'Quick action buttons are visible',
-            'Recent activity is displayed',
-            'Navigation is intuitive'
-          ],
-          priority: 'high' as const,
-          storyPoints: 8
-        },
-        {
-          id: 'us-3',
-          title: 'Settings Management',
-          description: 'As a user, I want to manage my settings so that I can customize my experience',
-          acceptanceCriteria: [
-            'User can update profile information',
-            'Notification preferences can be changed',
-            'Theme selection is available',
-            'Changes are saved automatically'
-          ],
-          priority: 'medium' as const,
-          storyPoints: 3
-        }
-      ],
-      personas: [
-        {
-          name: 'Alex the Product Manager',
-          role: 'Primary User',
-          goals: [
-            'Streamline product planning process',
-            'Improve team collaboration',
-            'Reduce time to market'
-          ],
-          painPoints: [
-            'Manual documentation takes too long',
-            'Multiple tools create friction',
-            'Communication gaps with engineering'
-          ]
-        },
-        {
-          name: 'Sam the Developer',
-          role: 'Secondary User',
-          goals: [
-            'Clear requirements understanding',
-            'Efficient development workflow',
-            'Quality code delivery'
-          ],
-          painPoints: [
-            'Unclear requirements',
-            'Frequent scope changes',
-            'Inadequate technical documentation'
-          ]
-        }
-      ]
-    };
+        { status: 500 }
+      );
+    }
 
     const processingTime = Date.now() - startTime;
 
+    // Format the response using the backend agent result
+    const responseData = {
+      userStories: result.data?.userStories || [
+        {
+          id: 'us-generated',
+          title: 'Generated User Stories',
+          description: result.data?.text || 'User stories generated',
+          acceptanceCriteria: ['See full response for detailed criteria'],
+          priority: 'high' as const,
+          storyPoints: 5
+        }
+      ],
+      personas: result.data?.personas || [
+        {
+          name: 'Generated Persona',
+          role: 'Primary User',
+          goals: ['See full response for persona details'],
+          painPoints: ['See full response for pain points']
+        }
+      ],
+      rawResponse: result.data?.text || result.data?.content || '',
+      text: result.data?.text || result.data?.content || '',
+    };
+
     return NextResponse.json({
       success: true,
-      data: mockResponse,
+      data: responseData,
       metadata: {
         agentType: 'user-story',
         processingTime,
         confidence: 0.89,
         sessionId: sessionId || `session-${Date.now()}`,
+        usage: result.metadata?.usage,
+        toolCalls: result.metadata?.toolCalls,
       },
     });
 

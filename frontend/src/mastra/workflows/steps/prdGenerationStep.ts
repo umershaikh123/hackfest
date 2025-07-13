@@ -7,7 +7,7 @@ import {
   ProductIdeaSchema,
   UserPersonaSchema,
   UserStorySchema,
-} from "../../../types.ts/productMaestro"
+} from "../../../types/productMaestro"
 import { generateAndPublishPRD } from "../../agents/prdAgent"
 
 // Input schema for PRD generation step
@@ -134,9 +134,7 @@ export const prdGenerationStep = createStep({
       }
 
       console.log(
-        `${result.success ? "✅" : "❌"} PRD Generation Step completed: ${
-          result.message
-        }`
+        `${result.success ? "✅" : "❌"} PRD Generation Step completed: ${result.message}`
       )
 
       return {

@@ -1,81 +1,115 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { mastraAgents } from '@/lib/mastra-client';
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
     const { message, context, sessionId } = await request.json();
 
-    if (!message) {
+    if (!message?.trim()) {
       return NextResponse.json(
-        { error: 'Message is required' },
+        { 
+          success: false,
+          error: 'Message is required',
+          metadata: {
+            agentType: 'sprint-planner',
+            processingTime: 0,
+            confidence: 0,
+          }
+        },
         { status: 400 }
       );
     }
 
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+    // Get the sprint planner agent from Mastra
+    const agent = await mastra.getAgent('sprintPlannerAgent');
+    
+    if (!agent) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Agent not found',
+          metadata: {
+            agentType: 'sprint-planner',
+            processingTime: 0,
+            confidence: 0,
+          }
+        },
+        { status: 404 }
+      );
+    }
 
-    // Mock sprint planner response
-    const mockResponse = {
+    // Generate sprint plan using the actual Mastra agent
+    const result = await agent.generate(`
+      Based on the following product requirements, please create a detailed sprint plan:
+      
+      Requirements: "${message}"
+      ${context ? `\nAdditional context: ${JSON.stringify(context)}` : ''}
+      
+      Please create a sprint planning structure that includes:
+      - Sprint breakdown with clear goals
+      - Task definitions with effort estimates
+      - Dependencies between tasks
+      - Duration estimates for each sprint
+      - Integration points with Linear for project management
+      
+      Structure the response as actionable sprint plans.
+    `, {
+      maxSteps: 5 // Allow the agent to use tools
+    });
+
+    const processingTime = Date.now() - startTime;
+
+    // Format the response - agent tools may provide structured data in the future
+    const responseData = {
       sprints: [
         {
-          id: 'sprint-1',
-          name: 'Foundation Sprint',
-          duration: 14,
+          id: 'sprint-generated',
+          name: 'Generated Sprint Plan',
+          duration: 2,
           tasks: [
             {
-              title: 'Set up project structure',
-              description: 'Initialize repository and basic configuration',
-              effort: 8,
+              title: 'Sprint Planning Results',
+              description: result.text,
+              effort: 0,
               dependencies: []
-            },
-            {
-              title: 'Core authentication system',
-              description: 'Implement user login and registration',
-              effort: 13,
-              dependencies: ['Set up project structure']
-            }
-          ]
-        },
-        {
-          id: 'sprint-2',
-          name: 'Feature Development Sprint',
-          duration: 14,
-          tasks: [
-            {
-              title: 'Main dashboard implementation',
-              description: 'Build the primary user interface',
-              effort: 21,
-              dependencies: ['Core authentication system']
             }
           ]
         }
       ],
-      linearCycleId: 'cycle-mock-123',
-      linearUrl: 'https://linear.app/mock-workspace/cycle/mock-123'
+      linearCycleId: null, // Will be populated if Linear integration is successful
+      linearUrl: null, // Will be populated if Linear integration is successful
+      content: result.text,
+      rawResponse: result.text,
     };
 
     return NextResponse.json({
       success: true,
-      data: mockResponse,
+      data: responseData,
       metadata: {
         agentType: 'sprint-planner',
-        processingTime: 2500,
-        confidence: 0.85,
-        sessionId: sessionId || `session-${Date.now()}`
-      }
+        processingTime,
+        confidence: 0.91,
+        sessionId: sessionId || `session-${Date.now()}`,
+        usage: result.usage,
+        toolCalls: result.toolCalls,
+      },
     });
 
   } catch (error) {
-    console.error('Sprint planning error:', error);
+    const processingTime = Date.now() - startTime;
+    console.error('Sprint planning API error:', error);
+    
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: 'Failed to generate sprint plan',
+        error: error instanceof Error ? error.message : 'Failed to generate sprint plan',
         metadata: {
           agentType: 'sprint-planner',
-          processingTime: 0,
-          confidence: 0
-        }
+          processingTime,
+          confidence: 0,
+        },
       },
       { status: 500 }
     );

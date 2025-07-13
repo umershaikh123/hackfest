@@ -42,12 +42,6 @@ const storage = new LibSQLStore({
   url: process.env.DATABASE_URL || "file:./product-maestro.db",
 })
 
-// const pineconeStore = new PineconeStore({
-//   apiKey: process.env.PINECONE_API_KEY!,
-//   host: process.env.PINECONE_HOST!,
-//   indexName: process.env.PINECONE_INDEX_NAME!,
-// });
-
 export const mastra = new Mastra({
   agents: {
     // Core Product Management Agents
@@ -103,7 +97,7 @@ export const tools = {
 }
 
 // Export types for frontend integration
-export type * from "../types.ts/productMaestro"
+export type * from "../types"
 
 // Export test functions for development
 export const testFunctions = {
@@ -191,7 +185,9 @@ export const createProductMaestroSession = (sessionId?: string) => {
         
         Please help me refine this idea and provide structured feedback.
       `,
-        { conversationId: id }
+        {
+          maxSteps: 5,
+        }
       )
     },
 
@@ -202,7 +198,7 @@ export const createProductMaestroSession = (sessionId?: string) => {
         
         Please generate comprehensive user stories with acceptance criteria.
       `,
-        { conversationId: id }
+        { maxSteps: 5 }
       )
     },
 
@@ -214,7 +210,7 @@ export const createProductMaestroSession = (sessionId?: string) => {
         Product Idea: ${ideaContent}
         User Stories: ${userStoriesContent}
       `,
-        { conversationId: id }
+        { maxSteps: 5 }
       )
     },
 
@@ -223,7 +219,7 @@ export const createProductMaestroSession = (sessionId?: string) => {
         `
         Create sprint plans based on these user stories: ${userStoriesContent}
       `,
-        { conversationId: id }
+        { maxSteps: 5 }
       )
     },
 
@@ -233,7 +229,7 @@ export const createProductMaestroSession = (sessionId?: string) => {
         Create visual workflows for: ${ideaContent}
         Based on user stories: ${userStoriesContent}
       `,
-        { conversationId: id }
+        { maxSteps: 5 }
       )
     },
 
@@ -253,7 +249,7 @@ export const createProductMaestroSession = (sessionId?: string) => {
         
         Please use the feedback router tool to provide routing decision.
       `,
-        { conversationId: id }
+        { maxSteps: 5 }
       )
     },
   }

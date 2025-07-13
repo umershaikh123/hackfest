@@ -3,7 +3,7 @@ import { z } from "zod"
 import {
   ProductIdeaSchema,
   UserPersonaSchema,
-} from "../../types.ts/productMaestro"
+} from "../../types/productMaestro"
 
 export const ideaGenerationTool = createTool({
   id: "idea-generation",

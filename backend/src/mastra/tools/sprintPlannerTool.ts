@@ -116,7 +116,7 @@ class LinearAPIClient {
     }
 
     const data = await response.json()
-    
+
     if (data.errors) {
       throw new Error(`Linear GraphQL error: ${data.errors[0].message}`)
     }
@@ -171,31 +171,54 @@ export const sprintPlannerTool = createTool({
   `,
   inputSchema: z.object({
     productTitle: z.string().describe("Product name for sprint planning"),
-    features: z.array(
-      z.object({
-        name: z.string(),
-        description: z.string(),
-        acceptanceCriteria: z.array(z.string()),
-        priority: z.enum(["high", "medium", "low"]),
-      })
-    ).describe("List of product features to plan sprints for"),
-    userStories: z.array(
-      z.object({
-        id: z.string(),
-        title: z.string(),
-        persona: z.string(),
-        userAction: z.string(),
-        benefit: z.string(),
-        acceptanceCriteria: z.array(z.string()),
-        priority: z.enum(["low", "medium", "high", "critical"]),
-        storyPoints: z.number(),
-      })
-    ).describe("User stories to include in sprint planning"),
-    teamSize: z.number().min(1).max(20).default(4).describe("Number of developers on the team"),
-    sprintLength: z.enum(["1 week", "2 weeks", "3 weeks", "4 weeks"]).default("2 weeks").describe("Length of each sprint"),
-    totalSprints: z.number().min(1).max(10).default(3).describe("Number of sprints to plan"),
-    createLinearProject: z.boolean().default(false).describe("Whether to create cycles and issues in Linear"),
-    linearTeamId: z.string().optional().describe("Linear team ID (required if createLinearProject is true)"),
+    features: z
+      .array(
+        z.object({
+          name: z.string(),
+          description: z.string(),
+          acceptanceCriteria: z.array(z.string()),
+          priority: z.enum(["high", "medium", "low"]),
+        })
+      )
+      .describe("List of product features to plan sprints for"),
+    userStories: z
+      .array(
+        z.object({
+          id: z.string(),
+          title: z.string(),
+          persona: z.string(),
+          userAction: z.string(),
+          benefit: z.string(),
+          acceptanceCriteria: z.array(z.string()),
+          priority: z.enum(["low", "medium", "high", "critical"]),
+          storyPoints: z.number(),
+        })
+      )
+      .describe("User stories to include in sprint planning"),
+    teamSize: z
+      .number()
+      .min(1)
+      .max(20)
+      .default(4)
+      .describe("Number of developers on the team"),
+    sprintLength: z
+      .enum(["1 week", "2 weeks", "3 weeks", "4 weeks"])
+      .default("2 weeks")
+      .describe("Length of each sprint"),
+    totalSprints: z
+      .number()
+      .min(1)
+      .max(10)
+      .default(3)
+      .describe("Number of sprints to plan"),
+    createLinearProject: z
+      .boolean()
+      .default(false)
+      .describe("Whether to create cycles and issues in Linear"),
+    linearTeamId: z
+      .string()
+      .optional()
+      .describe("Linear team ID (required if createLinearProject is true)"),
   }),
   outputSchema: z.object({
     sprints: z.array(SprintSchema),
@@ -208,17 +231,25 @@ export const sprintPlannerTool = createTool({
     }),
     linearIntegration: z.object({
       enabled: z.boolean(),
-      cyclesCreated: z.array(z.object({
-        cycleId: z.string(),
-        cycleName: z.string(),
-        linearUrl: z.string().optional(),
-      })).optional(),
-      issuesCreated: z.array(z.object({
-        issueId: z.string(),
-        issueIdentifier: z.string(),
-        title: z.string(),
-        cycleId: z.string(),
-      })).optional(),
+      cyclesCreated: z
+        .array(
+          z.object({
+            cycleId: z.string(),
+            cycleName: z.string(),
+            linearUrl: z.string().optional(),
+          })
+        )
+        .optional(),
+      issuesCreated: z
+        .array(
+          z.object({
+            issueId: z.string(),
+            issueIdentifier: z.string(),
+            title: z.string(),
+            cycleId: z.string(),
+          })
+        )
+        .optional(),
       errors: z.array(z.string()).optional(),
     }),
   }),
@@ -237,15 +268,21 @@ export const sprintPlannerTool = createTool({
 
       // Calculate team velocity (conservative estimate: 8 story points per developer per 2-week sprint)
       const baseVelocity = teamSize * 8
-      const sprintDurationMultiplier = sprintLength === "1 week" ? 0.5 : 
-                                     sprintLength === "3 weeks" ? 1.5 :
-                                     sprintLength === "4 weeks" ? 2 : 1
+      const sprintDurationMultiplier =
+        sprintLength === "1 week"
+          ? 0.5
+          : sprintLength === "3 weeks"
+            ? 1.5
+            : sprintLength === "4 weeks"
+              ? 2
+              : 1
       const sprintVelocity = Math.round(baseVelocity * sprintDurationMultiplier)
 
       // Sort user stories by priority and story points for optimal sprint planning
       const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 }
       const sortedStories = [...userStories].sort((a, b) => {
-        const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority]
+        const priorityDiff =
+          priorityOrder[b.priority] - priorityOrder[a.priority]
         if (priorityDiff !== 0) return priorityDiff
         return a.storyPoints - b.storyPoints // Smaller stories first within same priority
       })
@@ -259,8 +296,11 @@ export const sprintPlannerTool = createTool({
         let currentSprintPoints = 0
 
         // Fill sprint with user stories up to velocity limit
-        while (currentStoryIndex < sortedStories.length && 
-               currentSprintPoints + sortedStories[currentStoryIndex].storyPoints <= sprintVelocity) {
+        while (
+          currentStoryIndex < sortedStories.length &&
+          currentSprintPoints + sortedStories[currentStoryIndex].storyPoints <=
+            sprintVelocity
+        ) {
           const story = sortedStories[currentStoryIndex]
           sprintUserStories.push(story.id)
           currentSprintPoints += story.storyPoints
@@ -271,18 +311,21 @@ export const sprintPlannerTool = createTool({
         const sprintTasks = sprintUserStories.map((storyId, index) => {
           const story = userStories.find(s => s.id === storyId)!
           const estimatedHours = story.storyPoints * 6 // Conservative 6 hours per story point
-          
+
           return {
             title: `Implement: ${story.title}`,
-            description: `${story.userAction} - ${story.benefit}\n\nAcceptance Criteria:\n${story.acceptanceCriteria.join('\n')}`,
+            description: `${story.userAction} - ${story.benefit}\n\nAcceptance Criteria:\n${story.acceptanceCriteria.join("\n")}`,
             estimatedHours,
             assignee: `Developer ${(index % teamSize) + 1}`,
-            dependencies: sprintNum > 1 ? [`Sprint ${sprintNum - 1} completion`] : [],
+            dependencies:
+              sprintNum > 1 ? [`Sprint ${sprintNum - 1} completion`] : [],
           }
         })
 
         // Add feature-specific tasks for high-priority features
-        const relevantFeatures = features.filter(f => f.priority === "high" && sprintNum <= 2)
+        const relevantFeatures = features.filter(
+          f => f.priority === "high" && sprintNum <= 2
+        )
         relevantFeatures.forEach(feature => {
           sprintTasks.push({
             title: `Architecture: ${feature.name}`,
@@ -295,22 +338,41 @@ export const sprintPlannerTool = createTool({
 
         const sprint: z.infer<typeof SprintSchema> = {
           sprintNumber: sprintNum,
-          goal: sprintNum === 1 ? 
-            `Establish core foundation and implement critical user flows` :
-            sprintNum === 2 ?
-            `Build primary features and user experience` :
-            `Polish, optimize, and prepare for launch`,
+          goal:
+            sprintNum === 1
+              ? `Establish core foundation and implement critical user flows`
+              : sprintNum === 2
+                ? `Build primary features and user experience`
+                : `Polish, optimize, and prepare for launch`,
           duration: sprintLength,
           userStories: sprintUserStories,
           tasks: sprintTasks,
-          deliverables: sprintNum === 1 ? 
-            ["Core user authentication", "Basic UI framework", "Database setup"] :
-            sprintNum === 2 ?
-            ["Primary feature implementation", "User workflow completion", "Basic testing"] :
-            ["Performance optimization", "Bug fixes", "Production deployment"],
-          risks: sprintNum === 1 ?
-            ["Technology setup delays", "Team onboarding time"] :
-            ["Scope creep", "Integration complexity", "Testing bottlenecks"],
+          deliverables:
+            sprintNum === 1
+              ? [
+                  "Core user authentication",
+                  "Basic UI framework",
+                  "Database setup",
+                ]
+              : sprintNum === 2
+                ? [
+                    "Primary feature implementation",
+                    "User workflow completion",
+                    "Basic testing",
+                  ]
+                : [
+                    "Performance optimization",
+                    "Bug fixes",
+                    "Production deployment",
+                  ],
+          risks:
+            sprintNum === 1
+              ? ["Technology setup delays", "Team onboarding time"]
+              : [
+                  "Scope creep",
+                  "Integration complexity",
+                  "Testing bottlenecks",
+                ],
         }
 
         sprints.push(sprint)
@@ -320,27 +382,45 @@ export const sprintPlannerTool = createTool({
       }
 
       // Calculate summary metrics
-      const totalStoryPoints = userStories.reduce((sum, story) => sum + story.storyPoints, 0)
-      const allocatedStoryPoints = sprints.reduce((sum, sprint) => 
-        sum + sprint.userStories.reduce((sprintSum, storyId) => {
-          const story = userStories.find(s => s.id === storyId)
-          return sprintSum + (story?.storyPoints || 0)
-        }, 0), 0
+      const totalStoryPoints = userStories.reduce(
+        (sum, story) => sum + story.storyPoints,
+        0
+      )
+      const allocatedStoryPoints = sprints.reduce(
+        (sum, sprint) =>
+          sum +
+          sprint.userStories.reduce((sprintSum, storyId) => {
+            const story = userStories.find(s => s.id === storyId)
+            return sprintSum + (story?.storyPoints || 0)
+          }, 0),
+        0
       )
 
       const riskFactors = [
-        ...(allocatedStoryPoints < totalStoryPoints ? ["Some user stories may not fit in planned sprints"] : []),
-        ...(teamSize < 3 ? ["Small team size may limit parallel development"] : []),
-        ...(sprintLength === "1 week" ? ["Short sprints may limit feature delivery"] : []),
-        ...(features.filter(f => f.priority === "high").length > 5 ? ["High number of priority features may cause scope creep"] : []),
+        ...(allocatedStoryPoints < totalStoryPoints
+          ? ["Some user stories may not fit in planned sprints"]
+          : []),
+        ...(teamSize < 3
+          ? ["Small team size may limit parallel development"]
+          : []),
+        ...(sprintLength === "1 week"
+          ? ["Short sprints may limit feature delivery"]
+          : []),
+        ...(features.filter(f => f.priority === "high").length > 5
+          ? ["High number of priority features may cause scope creep"]
+          : []),
       ]
 
       const recommendations = [
         `Maintain sprint velocity of ${sprintVelocity} story points`,
         "Conduct daily standups and sprint retrospectives",
         "Plan for 20% buffer time in each sprint",
-        ...(allocatedStoryPoints < totalStoryPoints ? ["Consider adding additional sprints or reducing scope"] : []),
-        ...(sprintLength === "2 weeks" ? ["Consider mid-sprint check-ins for longer user stories"] : []),
+        ...(allocatedStoryPoints < totalStoryPoints
+          ? ["Consider adding additional sprints or reducing scope"]
+          : []),
+        ...(sprintLength === "2 weeks"
+          ? ["Consider mid-sprint check-ins for longer user stories"]
+          : []),
       ]
 
       // Linear integration
@@ -358,13 +438,17 @@ export const sprintPlannerTool = createTool({
           // Create cycles for each sprint
           for (const sprint of sprints) {
             const startDate = new Date()
-            startDate.setDate(startDate.getDate() + (sprint.sprintNumber - 1) * 14) // 2 weeks per sprint
+            startDate.setDate(
+              startDate.getDate() + (sprint.sprintNumber - 1) * 14
+            ) // 2 weeks per sprint
             const endDate = new Date(startDate)
-            endDate.setDate(endDate.getDate() + (sprintLength === "1 week" ? 7 : 14))
+            endDate.setDate(
+              endDate.getDate() + (sprintLength === "1 week" ? 7 : 14)
+            )
 
             const cycle = await linearClient.createCycle({
               name: `${productTitle} - Sprint ${sprint.sprintNumber}`,
-              description: `${sprint.goal}\n\nDeliverables: ${sprint.deliverables.join(', ')}`,
+              description: `${sprint.goal}\n\nDeliverables: ${sprint.deliverables.join(", ")}`,
               teamId: linearTeamId,
               startsAt: startDate.toISOString(),
               endsAt: endDate.toISOString(),
@@ -396,10 +480,12 @@ export const sprintPlannerTool = createTool({
             }
           }
         } catch (error) {
-          linearIntegration.errors.push(`Linear integration failed: ${error.message}`)
+          linearIntegration.errors.push(`Linear integration failed: ${error}`)
         }
       } else if (createLinearProject) {
-        linearIntegration.errors.push("Linear integration requested but API key or team ID missing")
+        linearIntegration.errors.push(
+          "Linear integration requested but API key or team ID missing"
+        )
       }
 
       return {
@@ -413,9 +499,8 @@ export const sprintPlannerTool = createTool({
         },
         linearIntegration,
       }
-
     } catch (error) {
-      throw new Error(`Sprint planning failed: ${error.message}`)
+      throw new Error(`Sprint planning failed: ${error}`)
     }
   },
 })
@@ -430,13 +515,21 @@ export async function testSprintPlannerTool() {
       {
         name: "Task Management",
         description: "Create, edit, and organize tasks with due dates",
-        acceptanceCriteria: ["Users can create tasks", "Users can set due dates", "Tasks can be organized in lists"],
+        acceptanceCriteria: [
+          "Users can create tasks",
+          "Users can set due dates",
+          "Tasks can be organized in lists",
+        ],
         priority: "high" as const,
       },
       {
         name: "Team Collaboration",
         description: "Share tasks and projects with team members",
-        acceptanceCriteria: ["Users can invite team members", "Tasks can be assigned", "Comments on tasks"],
+        acceptanceCriteria: [
+          "Users can invite team members",
+          "Tasks can be assigned",
+          "Comments on tasks",
+        ],
         priority: "medium" as const,
       },
     ],
@@ -447,7 +540,11 @@ export async function testSprintPlannerTool() {
         persona: "Project Manager",
         userAction: "create a new task with title and description",
         benefit: "I can track work that needs to be done",
-        acceptanceCriteria: ["Task form with title field", "Task form with description field", "Save button creates task"],
+        acceptanceCriteria: [
+          "Task form with title field",
+          "Task form with description field",
+          "Save button creates task",
+        ],
         priority: "high" as const,
         storyPoints: 5,
       },
@@ -457,7 +554,11 @@ export async function testSprintPlannerTool() {
         persona: "Project Manager",
         userAction: "set a due date for tasks",
         benefit: "I can prioritize work by deadlines",
-        acceptanceCriteria: ["Date picker component", "Due date displayed on task", "Overdue tasks highlighted"],
+        acceptanceCriteria: [
+          "Date picker component",
+          "Due date displayed on task",
+          "Overdue tasks highlighted",
+        ],
         priority: "medium" as const,
         storyPoints: 3,
       },
@@ -471,15 +572,19 @@ export async function testSprintPlannerTool() {
   try {
     const result = await sprintPlannerTool.execute({
       context: testInput,
-      runtimeContext: {},
+      runtimeContext: undefined as any,
     })
 
     console.log("✅ Sprint Planner Tool test passed!")
     console.log(`📊 Generated ${result.sprints.length} sprints`)
-    console.log(`🎯 Sprint velocity: ${result.summary.sprintVelocity} story points`)
+    console.log(
+      `🎯 Sprint velocity: ${result.summary.sprintVelocity} story points`
+    )
     console.log(`⏱️  Estimated duration: ${result.summary.estimatedDuration}`)
-    console.log(`📝 Total tasks: ${result.sprints.reduce((sum, s) => sum + s.tasks.length, 0)}`)
-    
+    console.log(
+      `📝 Total tasks: ${result.sprints.reduce((sum, s) => sum + s.tasks.length, 0)}`
+    )
+
     return result
   } catch (error) {
     console.error("❌ Sprint Planner Tool test failed:", error)

@@ -2,6 +2,7 @@
 import { Agent } from "@mastra/core"
 import { sprintPlannerTool } from "../tools/sprintPlannerTool.js"
 import { ragKnowledgeTool } from "../tools/ragKnowledgeTool.js"
+import { google } from "@ai-sdk/google"
 
 export const sprintPlannerAgent = new Agent({
   name: "The Sprint Architect",
@@ -45,11 +46,7 @@ export const sprintPlannerAgent = new Agent({
 
     Remember: Great sprint plans balance ambitious goals with realistic execution. Focus on sustainable velocity and continuous delivery.
   `,
-  model: {
-    provider: "google",
-    name: "gemini-2.0-flash-exp",
-    toolChoice: "auto",
-  },
+  model: google("gemini-2.0-flash"),
   tools: {
     sprintPlannerTool,
     ragKnowledgeTool,
@@ -80,12 +77,12 @@ export async function testSprintPlannerAgent() {
 
   try {
     const response = await sprintPlannerAgent.generate(testMessage)
-    
+
     console.log("✅ Sprint Planner Agent test passed!")
     console.log("📋 Agent Response:")
     console.log(response.text)
     console.log(`🔧 Tools Used: ${response.toolCalls?.length || 0}`)
-    
+
     return response
   } catch (error) {
     console.error("❌ Sprint Planner Agent test failed:", error)

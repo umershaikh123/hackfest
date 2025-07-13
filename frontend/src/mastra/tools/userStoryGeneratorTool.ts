@@ -6,7 +6,7 @@ import {
   ProductIdeaSchema,
   UserPersonaSchema,
   UserStorySchema,
-} from "../../types.ts/productMaestro"
+} from "../../types/productMaestro"
 
 export const userStoryGeneratorTool = createTool({
   id: "user-story-generator",
@@ -397,7 +397,11 @@ function createStory(
 function prioritizeStories(stories: any[]): void {
   // Sort by priority: critical > high > medium > low
   const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 }
-  stories.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority])
+  stories.sort(
+    (a, b) =>
+      priorityOrder[b.priority as keyof typeof priorityOrder] -
+      priorityOrder[a.priority as keyof typeof priorityOrder]
+  )
 }
 
 function estimateStories(stories: any[]): void {

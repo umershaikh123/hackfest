@@ -7,7 +7,7 @@ import {
   ProductIdeaSchema,
   UserPersonaSchema,
   UserStorySchema,
-} from "../../../types.ts/productMaestro"
+} from "../../../types/productMaestro"
 
 export const userStoryGenerationStep = createStep({
   id: "user-story-generation-step",

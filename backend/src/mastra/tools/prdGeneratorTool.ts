@@ -5,7 +5,12 @@ import { google } from "@ai-sdk/google"
 import { generateObject } from "ai"
 import { z } from "zod"
 import "dotenv/config"
-import { ProductIdeaSchema, UserPersonaSchema, UserStorySchema, PRDSchema } from "../../types/productMaestro"
+import {
+  ProductIdeaSchema,
+  UserPersonaSchema,
+  UserStorySchema,
+  PRDSchema,
+} from "../../types/productMaestro"
 import { createNotionBlocks } from "./notionTool"
 
 // Input schema for PRD generation
@@ -13,21 +18,34 @@ const PRDGeneratorInputSchema = z.object({
   productIdea: ProductIdeaSchema,
   userPersonas: z.array(UserPersonaSchema),
   userStories: z.array(UserStorySchema),
-  additionalContext: z.string().optional().describe("Any additional context or requirements"),
+  additionalContext: z
+    .string()
+    .optional()
+    .describe("Any additional context or requirements"),
 })
 
 // Output schema with Notion-ready content
 const PRDGeneratorOutputSchema = z.object({
   title: z.string(),
-  notionProperties: z.record(z.any()).describe("Properties for Notion database page"),
-  notionBlocks: z.array(z.any()).describe("Array of Notion block objects for page content - limited to 100 blocks"),
-  additionalBlocks: z.array(z.any()).optional().describe("Additional blocks that exceed Notion's 100-block limit"),
+  notionProperties: z
+    .record(z.any())
+    .describe("Properties for Notion database page"),
+  notionBlocks: z
+    .array(z.any())
+    .describe(
+      "Array of Notion block objects for page content - limited to 100 blocks"
+    ),
+  additionalBlocks: z
+    .array(z.any())
+    .optional()
+    .describe("Additional blocks that exceed Notion's 100-block limit"),
   structuredPRD: PRDSchema.describe("Structured PRD data for reference"),
 })
 
 export const prdGeneratorTool = createTool({
   id: "prd-generator-tool",
-  description: "Generates comprehensive Product Requirements Document content in Notion-compatible format",
+  description:
+    "Generates comprehensive Product Requirements Document content in Notion-compatible format",
   inputSchema: PRDGeneratorInputSchema,
   outputSchema: PRDGeneratorOutputSchema,
   execute: async ({ context, runtimeContext }) => {
@@ -119,7 +137,7 @@ export const prdGeneratorTool = createTool({
         },
         "Last Updated": {
           date: {
-            start: new Date().toISOString().split('T')[0],
+            start: new Date().toISOString().split("T")[0],
           },
         },
         Priority: {
@@ -150,17 +168,27 @@ export const prdGeneratorTool = createTool({
         createNotionBlocks.heading1("👥 User Personas"),
         ...structuredPRD.userPersonas.flatMap(persona => [
           createNotionBlocks.heading2(`${persona.name} - ${persona.role}`),
-          createNotionBlocks.paragraph(`**Demographics:** ${persona.demographics}`),
-          createNotionBlocks.paragraph(`**Needs:** ${persona.needs.join(", ")}`),
-          createNotionBlocks.paragraph(`**Pain Points:** ${persona.painPoints.join(", ")}`),
-          createNotionBlocks.paragraph(`**Goals:** ${persona.goals.join(", ")}`),
+          createNotionBlocks.paragraph(
+            `**Demographics:** ${persona.demographics}`
+          ),
+          createNotionBlocks.paragraph(
+            `**Needs:** ${persona.needs.join(", ")}`
+          ),
+          createNotionBlocks.paragraph(
+            `**Pain Points:** ${persona.painPoints.join(", ")}`
+          ),
+          createNotionBlocks.paragraph(
+            `**Goals:** ${persona.goals.join(", ")}`
+          ),
         ]),
         createNotionBlocks.divider(),
 
         // Features
         createNotionBlocks.heading1("🚀 Features"),
         ...structuredPRD.features.flatMap(feature => [
-          createNotionBlocks.heading2(`${feature.name} (Priority: ${feature.priority.toUpperCase()})`),
+          createNotionBlocks.heading2(
+            `${feature.name} (Priority: ${feature.priority.toUpperCase()})`
+          ),
           createNotionBlocks.paragraph(feature.description),
           createNotionBlocks.heading3("Acceptance Criteria"),
           ...createNotionBlocks.bulletedList(feature.acceptanceCriteria),
@@ -177,18 +205,22 @@ export const prdGeneratorTool = createTool({
         createNotionBlocks.divider(),
 
         // Technical Overview
-        ...(structuredPRD.technicalOverview ? [
-          createNotionBlocks.heading1("⚙️ Technical Overview"),
-          createNotionBlocks.paragraph(structuredPRD.technicalOverview),
-          createNotionBlocks.divider(),
-        ] : []),
+        ...(structuredPRD.technicalOverview
+          ? [
+              createNotionBlocks.heading1("⚙️ Technical Overview"),
+              createNotionBlocks.paragraph(structuredPRD.technicalOverview),
+              createNotionBlocks.divider(),
+            ]
+          : []),
 
         // UI/UX Notes
-        ...(structuredPRD.uiUxNotes ? [
-          createNotionBlocks.heading1("🎨 UI/UX Notes"),
-          createNotionBlocks.paragraph(structuredPRD.uiUxNotes),
-          createNotionBlocks.divider(),
-        ] : []),
+        ...(structuredPRD.uiUxNotes
+          ? [
+              createNotionBlocks.heading1("🎨 UI/UX Notes"),
+              createNotionBlocks.paragraph(structuredPRD.uiUxNotes),
+              createNotionBlocks.divider(),
+            ]
+          : []),
 
         // Assumptions
         createNotionBlocks.heading1("🤔 Assumptions"),
@@ -215,15 +247,22 @@ export const prdGeneratorTool = createTool({
         ...createNotionBlocks.bulletedList(structuredPRD.futureConsiderations),
       ]
 
-      console.log(`✅ Successfully generated PRD with ${notionBlocks.length} content blocks`)
+      console.log(
+        `✅ Successfully generated PRD with ${notionBlocks.length} content blocks`
+      )
 
       // Notion has a 100-block limit for initial page creation
       const maxBlocks = 100
       const initialBlocks = notionBlocks.slice(0, maxBlocks)
-      const additionalBlocks = notionBlocks.length > maxBlocks ? notionBlocks.slice(maxBlocks) : undefined
+      const additionalBlocks =
+        notionBlocks.length > maxBlocks
+          ? notionBlocks.slice(maxBlocks)
+          : undefined
 
       if (additionalBlocks) {
-        console.log(`📝 Note: ${additionalBlocks.length} blocks exceed Notion's 100-block limit and will need to be appended separately`)
+        console.log(
+          `📝 Note: ${additionalBlocks.length} blocks exceed Notion's 100-block limit and will need to be appended separately`
+        )
       }
 
       return {
@@ -235,7 +274,9 @@ export const prdGeneratorTool = createTool({
       }
     } catch (error) {
       console.error("❌ PRD Generation Error:", error)
-      throw new Error(`Failed to generate PRD: ${error instanceof Error ? error.message : "Unknown error"}`)
+      throw new Error(
+        `Failed to generate PRD: ${error instanceof Error ? error.message : "Unknown error"}`
+      )
     }
   },
 })
@@ -247,29 +288,44 @@ export async function testPRDGeneratorTool() {
   const sampleInput = {
     productIdea: {
       title: "HabitFlow",
-      description: "A habit tracking app that helps people build better daily routines with gamification elements",
-      problemStatement: "Young professionals struggle with maintaining consistent daily habits and routines",
-      targetAudience: "Young professionals aged 25-35 who want to improve their productivity and wellbeing",
+      description:
+        "A habit tracking app that helps people build better daily routines with gamification elements",
+      problemStatement:
+        "Young professionals struggle with maintaining consistent daily habits and routines",
+      targetAudience:
+        "Young professionals aged 25-35 who want to improve their productivity and wellbeing",
       coreFeatures: [
         "Habit tracking and streaks",
         "Gamification with points and badges",
         "Progress visualization",
         "Social challenges",
         "Customizable reminders",
-        "Analytics and insights"
+        "Analytics and insights",
       ],
       businessModel: "Freemium with premium features",
-      marketCategory: "Productivity & Health"
+      marketCategory: "Productivity & Health",
     },
     userPersonas: [
       {
         name: "Busy Professional",
         role: "Primary User",
         demographics: "25-35 year old working professional",
-        needs: ["Easy habit tracking", "Motivation to stay consistent", "Quick progress overview"],
-        painPoints: ["Forgets to track habits", "Loses motivation quickly", "Existing apps are too complex"],
-        goals: ["Build healthy routines", "Increase productivity", "Maintain work-life balance"]
-      }
+        needs: [
+          "Easy habit tracking",
+          "Motivation to stay consistent",
+          "Quick progress overview",
+        ],
+        painPoints: [
+          "Forgets to track habits",
+          "Loses motivation quickly",
+          "Existing apps are too complex",
+        ],
+        goals: [
+          "Build healthy routines",
+          "Increase productivity",
+          "Maintain work-life balance",
+        ],
+      },
     ],
     userStories: [
       {
@@ -277,25 +333,30 @@ export async function testPRDGeneratorTool() {
         title: "Create Daily Habit",
         persona: "Busy Professional",
         userAction: "I want to create a new daily habit",
-        benefit: "so that I can start tracking my progress towards building better routines",
+        benefit:
+          "so that I can start tracking my progress towards building better routines",
         acceptanceCriteria: [
           "User can name the habit",
           "User can set frequency (daily, weekly, etc.)",
           "User can set reminders",
-          "Habit appears in daily checklist"
+          "Habit appears in daily checklist",
         ],
         priority: "high" as const,
-        storyPoints: 5
-      }
+        storyPoints: 5,
+      },
     ],
-    additionalContext: "Focus on simplicity and user engagement through gamification"
+    additionalContext:
+      "Focus on simplicity and user engagement through gamification",
   }
 
-  const result = await prdGeneratorTool.execute({ context: sampleInput, runtimeContext: {} as any })
-  
+  const result = await prdGeneratorTool.execute({
+    context: sampleInput,
+    runtimeContext: {} as any,
+  })
+
   console.log("🔍 Generated PRD Title:", result.title)
   console.log("🔍 Number of Notion Blocks:", result.notionBlocks.length)
   console.log("🔍 Notion Properties:", Object.keys(result.notionProperties))
-  
+
   return result
 }

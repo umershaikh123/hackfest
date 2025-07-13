@@ -7,7 +7,7 @@ import {
   RoutingDecisionSchema,
   type Feedback,
   type RoutingDecision,
-} from "../../../types.ts/productMaestro.js"
+} from "../../../types/productMaestro.js"
 
 const FeedbackStepInput = z.object({
   sessionId: z.string(),
@@ -55,10 +55,7 @@ export const feedbackStep = createStep({
     // Process each feedback item
     for (const feedback of inputData.userFeedback) {
       console.log(
-        `📝 Processing ${feedback.type} feedback: "${feedback.content.substring(
-          0,
-          50
-        )}..."`
+        `📝 Processing ${feedback.type} feedback: "${feedback.content.substring(0, 50)}..."`
       )
 
       try {
@@ -73,20 +70,12 @@ export const feedbackStep = createStep({
           
           **Current Workflow Context:**
           - Current Step: ${inputData.currentWorkflowState.currentStep}
-          - Completed Steps: ${inputData.currentWorkflowState.completedSteps.join(
-            ", "
-          )}
-          - Artifacts Available: ${
-            Object.keys(
-              inputData.currentWorkflowState.artifactsGenerated || {}
-            ).join(", ") || "None"
-          }
+          - Completed Steps: ${inputData.currentWorkflowState.completedSteps.join(", ")}
+          - Artifacts Available: ${Object.keys(inputData.currentWorkflowState.artifactsGenerated || {}).join(", ") || "None"}
           
           **Session Context:**
           - Session ID: ${inputData.sessionId}
-          - Conversation History: ${
-            inputData.conversationHistory?.length || 0
-          } messages
+          - Conversation History: ${inputData.conversationHistory?.length || 0} messages
           
           Please use the feedback router tool to analyze this feedback and determine:
           1. Which agent should handle this feedback
@@ -101,7 +90,7 @@ export const feedbackStep = createStep({
         const agentResponse = await feedbackRouterAgent.generate(
           routingMessage,
           {
-            conversationId: `feedback-routing-${inputData.sessionId}`,
+            maxSteps: 5,
           }
         )
 
@@ -110,10 +99,7 @@ export const feedbackStep = createStep({
         const routingDecision: RoutingDecision = {
           targetAgent: mapFeedbackTypeToAgent(feedback.type),
           reasoning: `${feedback.type} feedback requires specialized agent handling`,
-          actionRequired: `Process feedback: "${feedback.content.substring(
-            0,
-            100
-          )}..."`,
+          actionRequired: `Process feedback: "${feedback.content.substring(0, 100)}..."`,
           contextToPass: {
             originalFeedback: feedback,
             workflowState: inputData.currentWorkflowState,

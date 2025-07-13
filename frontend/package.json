@@ -12,7 +12,10 @@
     "lint": "next lint",
     "start": "next start",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf .next node_modules"
+    "clean": "rm -rf .next node_modules",
+    "dev:mastra": "mastra dev --dir /mastra",
+    "build:mastra": "mastra build --dir /mastra",
+    "start:mastra": "mastra start  --dir /mastra"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.12",

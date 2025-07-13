@@ -1,64 +1,116 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { mastraAgents } from '@/lib/mastra-client';
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
     const { message, context, sessionId } = await request.json();
 
-    if (!message) {
+    if (!message?.trim()) {
       return NextResponse.json(
-        { error: 'Message is required' },
+        { 
+          success: false,
+          error: 'Message is required',
+          metadata: {
+            agentType: 'visual-design',
+            processingTime: 0,
+            confidence: 0,
+          }
+        },
         { status: 400 }
       );
     }
 
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2500));
+    // Get the visual design agent from Mastra
+    const agent = await mastra.getAgent('visualDesignAgent');
+    
+    if (!agent) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Agent not found',
+          metadata: {
+            agentType: 'visual-design',
+            processingTime: 0,
+            confidence: 0,
+          }
+        },
+        { status: 404 }
+      );
+    }
 
-    // Mock visual design response
-    const mockResponse = {
-      boardId: 'miro-board-123',
-      boardUrl: 'https://miro.com/app/board/mock-board-123',
+    // Generate visual design using the actual Mastra agent
+    const result = await agent.generate(`
+      Please create visual design artifacts for the following product:
+      
+      Product Details: "${message}"
+      ${context ? `\nAdditional context: ${JSON.stringify(context)}` : ''}
+      
+      Please create visual design deliverables including:
+      - User journey maps showing key touchpoints
+      - Process flow diagrams
+      - Wireframes for main screens
+      - Integration with Miro for collaborative design
+      
+      Structure the response with visual design recommendations and Miro board details.
+    `, {
+      maxSteps: 5 // Allow the agent to use tools
+    });
+
+    const processingTime = Date.now() - startTime;
+
+    // Format the response - agent tools may provide structured data in the future
+    const responseData = {
+      boardId: null, // Will be populated if Miro integration is successful
+      boardUrl: null, // Will be populated if Miro integration is successful
       artifacts: [
         {
           type: 'user-journey' as const,
-          elementCount: 8,
-          description: 'Complete user journey map showing key touchpoints'
+          elementCount: 0,
+          description: 'See full response for user journey details'
         },
         {
           type: 'wireframe' as const,
-          elementCount: 12,
-          description: 'Low-fidelity wireframes for main application screens'
+          elementCount: 0,
+          description: 'See full response for wireframe details'
         },
         {
           type: 'process-flow' as const,
-          elementCount: 6,
-          description: 'Process flow diagram showing system interactions'
+          elementCount: 0,
+          description: 'See full response for process flow details'
         }
-      ]
+      ],
+      content: result.text,
+      rawResponse: result.text,
     };
 
     return NextResponse.json({
       success: true,
-      data: mockResponse,
+      data: responseData,
       metadata: {
         agentType: 'visual-design',
-        processingTime: 3200,
+        processingTime,
         confidence: 0.88,
-        sessionId: sessionId || `session-${Date.now()}`
-      }
+        sessionId: sessionId || `session-${Date.now()}`,
+        usage: result.usage,
+        toolCalls: result.toolCalls,
+      },
     });
 
   } catch (error) {
-    console.error('Visual design error:', error);
+    const processingTime = Date.now() - startTime;
+    console.error('Visual design API error:', error);
+    
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: 'Failed to generate visual design',
+        error: error instanceof Error ? error.message : 'Failed to generate visual design',
         metadata: {
           agentType: 'visual-design',
-          processingTime: 0,
-          confidence: 0
-        }
+          processingTime,
+          confidence: 0,
+        },
       },
       { status: 500 }
     );
