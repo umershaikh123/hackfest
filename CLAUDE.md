@@ -20,7 +20,9 @@ Product Maestro is an AI-powered no-code IDE for product managers, built as a ha
 - `npm run test:idea` - Test idea generation functionality
 - `npm run test:rag` - Test RAG (Retrieval Augmented Generation) setup
 - `npm run test:prd` - Test PRD generation and Notion integration functionality
+- `npm run test:sprint` - Test sprint planning and Linear integration functionality
 - `npx tsx src/test/testEndToEnd.ts` - End-to-end PRD generation pipeline test
+- `npx tsx src/test/testSprintPlanner.ts` - Comprehensive sprint planner testing
 - Individual component testing available via exported test functions in respective files
 
 ### Troubleshooting
@@ -43,6 +45,8 @@ This ensures the Mastra build system is properly initialized before starting the
   - `DATABASE_URL` - LibSQL database URL (defaults to "file:./product-maestro.db")
   - `NOTION_API_KEY` - Notion integration API key for PRD publishing
   - `NOTION_PRD_DATABASE_ID` - Notion database ID where PRDs will be created
+  - `LINEAR_API_KEY` - Linear API key for sprint planning integration (optional)
+  - `LINEAR_TEAM_ID` - Linear team ID for creating cycles and issues (optional)
   - AI provider API keys (OpenAI, Google, Anthropic)
 
 ## Architecture Overview
@@ -64,13 +68,15 @@ The project is built on the Mastra framework for AI agent orchestration:
 - `ideaGenerationAgent.ts` - "The Brainstormer" for refining product ideas
 - `userStoryGeneratorAgent.ts` - "The Story Weaver" for creating user stories
 - `prdAgent.ts` - "The PRD Compiler" for generating comprehensive Product Requirements Documents
+- `sprintPlannerAgent.ts` - "The Sprint Architect" for creating development sprint plans with Linear integration
 - All agents use Google Gemini 2.0 Flash model and share memory storage
 
 #### Workflows (`src/mastra/workflows/`)
 
 - `productDevelopmentWorkflow.ts` - Complete pipeline from idea to development artifacts
-- Chains idea generation → user story generation → PRD generation → recommendations
+- Chains idea generation → user story generation → PRD generation → sprint planning
 - Automatically publishes PRDs to Notion with proper formatting
+- Creates Linear cycles and issues for sprint management (when configured)
 - Returns structured output with session tracking and next steps
 
 #### Type System (`src/types/productMaestro.ts`)
@@ -90,6 +96,7 @@ Comprehensive Zod schemas for:
 - `ideaGenerationTool.ts` - Structured product idea generation
 - `userStoryGeneratorTool.ts` - User story creation with priorities
 - `prdGeneratorTool.ts` - Comprehensive PRD content generation in Notion-compatible format
+- `sprintPlannerTool.ts` - Sprint planning with Linear integration for cycle and issue creation
 - `notionTool.ts` - General-purpose Notion API integration for creating pages and appending blocks
 - `ragKnowledgeTool.ts` - Knowledge base search and retrieval
 - `vectorQueryTool.ts` - Pinecone vector operations
@@ -107,8 +114,10 @@ Comprehensive Zod schemas for:
 3. User Story Generator Agent creates development artifacts
 4. PRD Compiler Agent generates comprehensive Product Requirements Document
 5. PRD is automatically published to Notion with proper formatting
-6. Workflow orchestrates the process and provides recommendations
-7. Results stored in LibSQL database with session tracking
+6. Sprint Architect Agent creates development sprint plans with Linear integration
+7. Linear cycles and issues are created for project management (when configured)
+8. Workflow orchestrates the process and provides recommendations
+9. Results stored in LibSQL database with session tracking
 
 ### Agent Communication Patterns
 
@@ -319,18 +328,21 @@ Product Maestro addresses a significant pain point for product-led organizations
 4. ~~RAG: Pinecone DB setup~~ **DONE** ✅
 5. ~~Testing existing agents script~~ **DONE** ✅
 
-#### 🚧 **Next Priorities**
+#### ✅ **Recently Completed**
+4. ~~Sprint Planner Agent (tool + workflow)~~ **DONE** ✅
+   - Sprint Planner Tool with Linear API integration for cycle and issue creation
+   - Sprint Architect Agent with expert agile methodology persona
+   - Workflow step integration with automatic sprint plan generation
+   - End-to-end testing pipeline with Linear workspace integration
+   - Team velocity calculation and smart task breakdown
+
+### 🚧 **Next Priorities**
 1. **Visual Design Agent (tool + workflow)**
    - Shadcn/UI component generation
    - Wireframe creation from PRD content
    - Dynamic visual feedback system
 
-2. **Sprint Planner Agent (tool + workflow)**
-   - Feature decomposition into sprint tasks
-   - Timeline estimation and priority assignment
-   - Integration with existing PRD data
-
-3. **Router/Feedback Analysis Agent (Internal)**
+2. **Router/Feedback Analysis Agent (Internal)**
    - User feedback processing and routing
    - Iterative refinement coordination
    - Multi-agent communication optimization

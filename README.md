@@ -30,7 +30,7 @@ A single, conversational interface that guides PMs from raw ideas to comprehensi
 - **The Brainstormer** - Refines and structures product ideas
 - **The Story Weaver** - Generates comprehensive user stories with acceptance criteria
 - **The PRD Compiler** - Creates detailed Product Requirements Documents
-- **The Sprint Planner** *(Coming Soon)* - Breaks down features into development sprints
+- **The Sprint Architect** - Creates development sprint plans with Linear integration
 - **Visual Design Agent** *(Coming Soon)* - Generates wireframes using Shadcn/UI components
 
 ### 💬 **Conversational Product Development**
@@ -44,6 +44,12 @@ A single, conversational interface that guides PMs from raw ideas to comprehensi
 - Automatic Notion integration for seamless publishing
 - Industry-standard formatting ready for engineering teams
 - Includes: Executive Summary, Problem Statement, Features, User Personas, Goals & Metrics
+
+### 🏃‍♂️ **Sprint Planning & Linear Integration**
+- Intelligent sprint planning with team velocity calculation
+- Automatic Linear cycle and issue creation
+- Smart task breakdown and effort estimation
+- Risk assessment and development recommendations
 
 ### 🎨 **Dynamic Visual Design** *(In Development)*
 - Real-time wireframe generation from requirements
@@ -110,6 +116,8 @@ cp .env.example .env
 # - PINECONE_API_KEY
 # - NOTION_API_KEY
 # - NOTION_PRD_DATABASE_ID
+# - LINEAR_API_KEY (optional, for sprint planning)
+# - LINEAR_TEAM_ID (optional, for sprint planning)
 # - Google AI API key
 ```
 
@@ -126,6 +134,7 @@ npm run type-check
 
 # Test the complete pipeline
 npm run test:prd
+npm run test:sprint
 npx tsx src/test/testEndToEnd.ts
 ```
 
@@ -136,6 +145,9 @@ npm run test:idea
 
 # Test RAG system
 npm run test:rag
+
+# Test sprint planning with Linear
+npm run test:sprint
 
 # End-to-end PRD generation
 npx tsx src/test/testEndToEnd.ts
@@ -151,6 +163,7 @@ npx tsx src/test/testEndToEnd.ts
 3. **User Story Generation**: Creates structured user stories with priorities
 4. **PRD Creation**: Generates comprehensive 100+ block PRD
 5. **Notion Publishing**: Automatically publishes formatted PRD
+6. **Sprint Planning**: Creates development sprints with Linear integration
 
 ### Sample Generated PRD
 🔗 [View Live PRD Example](https://notion.so/22e706f0b83a815fa4cdc0daa4d69e75)
@@ -174,6 +187,11 @@ npx tsx src/test/testEndToEnd.ts
 - Automatic Notion publishing with proper formatting
 - Industry-standard templates and best practices
 
+### **Sprint Planning & Project Management**
+- Automated sprint creation in Linear workspace
+- Smart velocity calculation and task estimation
+- Development roadmap generation with timelines
+
 ### **Extensible Agent Framework**
 - Modular architecture for easy expansion
 - TypeScript-native with full type safety
@@ -188,13 +206,13 @@ npx tsx src/test/testEndToEnd.ts
 - ✅ Idea Generation Agent with conversation memory
 - ✅ User Story Generator with priority assignment
 - ✅ PRD Compiler with comprehensive content generation
+- ✅ Sprint Planner Agent with Linear integration
 - ✅ Notion integration with automatic publishing
 - ✅ RAG system with Pinecone knowledge base
 - ✅ End-to-end testing pipeline
 
 ### 🚧 **In Development**
 - 🚧 Visual Design Agent for wireframe generation
-- 🚧 Sprint Planner Agent for development roadmaps
 - 🚧 Next.js conversational frontend
 - 🚧 Real-time chat interface
 
@@ -255,7 +273,7 @@ npx tsx src/test/testEndToEnd.ts
 2. **Technical Excellence** - Sophisticated multi-agent architecture with production-ready code
 3. **Real Business Value** - Solves actual pain points faced by product teams daily
 4. **Scalable Architecture** - Built for extensibility and enterprise adoption
-5. **Live Working Demo** - Functional system generating real Notion PRDs
+5. **Live Working Demo** - Functional system generating real Notion PRDs and Linear sprints
 
 **Product Maestro isn't just a concept—it's a working revolution in product management.**
 

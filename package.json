@@ -11,6 +11,7 @@
     "test:idea": "tsx src/test/testIdeaGeneration.ts",
     "test:rag": "tsx src/test/testRAGSetup.ts",
     "test:prd": "tsx src/test/testPRDGeneration.ts",
+    "test:sprint": "tsx src/test/testSprintPlanner.ts",
     "type-check": "tsc --noEmit"
   },
   "keywords": [],
